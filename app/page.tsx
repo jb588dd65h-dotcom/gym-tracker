@@ -30,6 +30,12 @@ export default function HomePage() {
   const [expanded, setExpanded] = useState<Jour | null>(null)
   const [joursLogged, setJoursLogged] = useState<Set<string>>(new Set())
   const [showAddModal, setShowAddModal] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(null), 3000)
+  }
 
   useEffect(() => {
     const now = new Date()
@@ -84,7 +90,6 @@ export default function HomePage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-500 text-sm mt-0.5">{day.groupes.join(' · ')}</p>
                   </div>
                 </div>
                 <ChevronDownIcon open={isOpen} />
@@ -130,7 +135,18 @@ export default function HomePage() {
         </button>
       </div>
 
-      <AddExerciseModal open={showAddModal} onClose={() => setShowAddModal(false)} />
+      <AddExerciseModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSaved={() => showToast('Exercice ajouté !')}
+      />
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-green-500 text-white text-sm font-semibold shadow-xl whitespace-nowrap">
+          ✓ {toast}
+        </div>
+      )}
     </div>
   )
 }

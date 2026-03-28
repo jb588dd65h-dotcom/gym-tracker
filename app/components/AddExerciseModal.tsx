@@ -16,9 +16,10 @@ type Step = 1 | 2 | 3
 interface Props {
   open: boolean
   onClose: () => void
+  onSaved?: () => void
 }
 
-export function AddExerciseModal({ open, onClose }: Props) {
+export function AddExerciseModal({ open, onClose, onSaved }: Props) {
   const [step, setStep] = useState<Step>(1)
   const [jour, setJour] = useState<Jour | null>(null)
   const [groupe, setGroupe] = useState<string | null>(null)
@@ -34,7 +35,6 @@ export function AddExerciseModal({ open, onClose }: Props) {
 
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
 
   function reset() {
     setStep(1)
@@ -49,7 +49,6 @@ export function AddExerciseModal({ open, onClose }: Props) {
     setS3('10')
     setRepos('')
     setSaveError(null)
-    setSuccess(false)
   }
 
   function handleClose() {
@@ -107,7 +106,7 @@ export function AddExerciseModal({ open, onClose }: Props) {
 
     const maxOrdre = (ordreData?.[0]?.ordre as number | undefined) ?? 0
 
-    const { error } = await supabase.from('exercises').insert({
+    const payload = {
       jour: jour!,
       groupe_musculaire: finalGroupe,
       exercice: name.trim(),
@@ -117,17 +116,27 @@ export function AddExerciseModal({ open, onClose }: Props) {
       serie3_reps_cible: parseInt(s3) || 10,
       repos: repos.trim() || null,
       ordre: maxOrdre + 1,
-    })
+    }
+
+    console.log('[AddExercise] inserting:', payload)
+
+    const { data: inserted, error } = await supabase
+      .from('exercises')
+      .insert(payload)
+      .select()
+
+    console.log('[AddExercise] result:', { inserted, error })
 
     setSaving(false)
 
     if (error) {
-      setSaveError('Erreur lors de la sauvegarde. Réessayez.')
+      setSaveError(`Erreur: ${error.message}`)
       return
     }
 
-    setSuccess(true)
-    setTimeout(handleClose, 1200)
+    // Close modal then notify parent to show toast
+    handleClose()
+    onSaved?.()
   }
 
   const selectedDay = DAYS.find((d) => d.jour === jour)
@@ -163,7 +172,7 @@ export function AddExerciseModal({ open, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-3 pb-4 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            {step > 1 && !success && (
+            {step > 1 && (
               <button
                 onClick={handleBack}
                 className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white/8 border border-white/8 text-gray-300 hover:text-white transition-colors"
@@ -356,14 +365,10 @@ export function AddExerciseModal({ open, onClose }: Props) {
               {/* Save */}
               <button
                 onClick={handleSave}
-                disabled={saving || success}
-                className={`w-full py-4 rounded-2xl font-semibold text-base transition-all duration-300 ${
-                  success
-                    ? 'bg-green-500 text-white scale-[0.98]'
-                    : 'bg-white text-black hover:bg-gray-100 active:scale-[0.98] disabled:opacity-50'
-                }`}
+                disabled={saving}
+                className="w-full py-4 rounded-2xl font-semibold text-base bg-white text-black hover:bg-gray-100 active:scale-[0.98] disabled:opacity-50 transition-all"
               >
-                {success ? '✓ Exercice ajouté !' : saving ? 'Enregistrement...' : "Ajouter l'exercice"}
+                {saving ? 'Enregistrement...' : "Ajouter l'exercice"}
               </button>
             </div>
           )}
