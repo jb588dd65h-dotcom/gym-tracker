@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Jour } from '@/lib/types'
+import { AddExerciseModal } from './components/AddExerciseModal'
 
 const days: { jour: Jour; label: string; groupes: string[] }[] = [
   { jour: 'lundi',    label: 'Lundi',    groupes: ['Épaules'] },
@@ -28,6 +29,7 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 export default function HomePage() {
   const [expanded, setExpanded] = useState<Jour | null>(null)
   const [joursLogged, setJoursLogged] = useState<Set<string>>(new Set())
+  const [showAddModal, setShowAddModal] = useState(false)
 
   useEffect(() => {
     const now = new Date()
@@ -116,16 +118,19 @@ export default function HomePage() {
 
       {/* Floating action button */}
       <div className="fixed bottom-6 right-4 flex items-center gap-2">
-        <span className="text-xs text-gray-400 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 shadow-lg">
+        <span className="text-xs text-gray-400 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 shadow-lg pointer-events-none">
           Ajouter un exercice
         </span>
         <button
+          onClick={() => setShowAddModal(true)}
           className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center text-white text-xl font-light hover:bg-white/20 transition-all active:scale-95"
           aria-label="Ajouter un exercice"
         >
           +
         </button>
       </div>
+
+      <AddExerciseModal open={showAddModal} onClose={() => setShowAddModal(false)} />
     </div>
   )
 }
