@@ -1,112 +1,130 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Jour } from '@/lib/types'
 
-export const dynamic = 'force-dynamic'
-
-const days: {
-  jour: Jour
-  label: string
-  groupes: string[]
-  color: string
-  borderColor: string
-  buttonColor: string
-}[] = [
-  {
-    jour: 'lundi',
-    label: 'Lundi',
-    groupes: ['Épaules'],
-    color: 'bg-blue-950/40',
-    borderColor: 'border-blue-800/50',
-    buttonColor: 'bg-blue-600 hover:bg-blue-500',
-  },
-  {
-    jour: 'mardi',
-    label: 'Mardi',
-    groupes: ['Biceps', 'Dos'],
-    color: 'bg-purple-950/40',
-    borderColor: 'border-purple-800/50',
-    buttonColor: 'bg-purple-600 hover:bg-purple-500',
-  },
-  {
-    jour: 'vendredi',
-    label: 'Vendredi',
-    groupes: ['Triceps', 'Pecs'],
-    color: 'bg-orange-950/40',
-    borderColor: 'border-orange-800/50',
-    buttonColor: 'bg-orange-600 hover:bg-orange-500',
-  },
-  {
-    jour: 'samedi',
-    label: 'Samedi',
-    groupes: ['Jambes'],
-    color: 'bg-green-950/40',
-    borderColor: 'border-green-800/50',
-    buttonColor: 'bg-green-600 hover:bg-green-500',
-  },
+const days: { jour: Jour; label: string; groupes: string[] }[] = [
+  { jour: 'lundi',    label: 'Lundi',    groupes: ['Épaules'] },
+  { jour: 'mardi',    label: 'Mardi',    groupes: ['Biceps', 'Dos'] },
+  { jour: 'vendredi', label: 'Vendredi', groupes: ['Triceps', 'Pecs'] },
+  { jour: 'samedi',   label: 'Samedi',   groupes: ['Jambes'] },
 ]
 
-async function getTodayLogs(): Promise<Set<string>> {
-  const today = new Date().toISOString().split('T')[0]
-
-  const { data, error } = await supabase
-    .from('workout_logs')
-    .select('exercise_id, exercises(jour)')
-    .eq('session_date', today)
-
-  if (error || !data) {
-    return new Set()
-  }
-
-  const joursLogged = new Set<string>()
-  for (const log of data) {
-    const exercise = log.exercises as unknown as { jour: string } | null
-    if (exercise?.jour) {
-      joursLogged.add(exercise.jour)
-    }
-  }
-
-  return joursLogged
+function ChevronDownIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="18" height="18" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth={2}
+      strokeLinecap="round" strokeLinejoin="round"
+      className={`transition-transform duration-300 text-gray-500 ${open ? 'rotate-180' : ''}`}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  )
 }
 
-export default async function HomePage() {
-  const joursLogged = await getTodayLogs()
+export default function HomePage() {
+  const [expanded, setExpanded] = useState<Jour | null>(null)
+  const [joursLogged, setJoursLogged] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+    supabase
+      .from('workout_logs')
+      .select('exercise_id, exercises(jour)')
+      .eq('session_date', today)
+      .then(({ data }) => {
+        if (!data) return
+        const done = new Set<string>()
+        for (const log of data) {
+          const ex = log.exercises as unknown as { jour: string } | null
+          if (ex?.jour) done.add(ex.jour)
+        }
+        setJoursLogged(done)
+      })
+  }, [])
+
+  function toggle(jour: Jour) {
+    setExpanded((prev) => (prev === jour ? null : jour))
+  }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-2">Séances du jour</h1>
-      <p className="text-gray-400 text-sm mb-6">Choisissez votre entraînement</p>
+    <div className="pb-24">
+      <h1 className="text-2xl font-bold mb-1">Vos séances</h1>
+      <p className="text-gray-500 text-sm mb-6">Choisissez votre entraînement</p>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {days.map((day) => {
+          const isOpen = expanded === day.jour
           const isDone = joursLogged.has(day.jour)
+
           return (
             <div
               key={day.jour}
-              className={`rounded-xl border p-5 ${day.color} ${day.borderColor}`}
+              className="bg-[#1A1A1A] border border-white/8 rounded-2xl overflow-hidden transition-all duration-200"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h2 className="text-lg font-semibold">{day.label}</h2>
-                  <p className="text-gray-400 text-sm mt-0.5">
-                    {day.groupes.join(' · ')}
-                  </p>
-                </div>
-                {isDone && (
-                  <span className="flex items-center gap-1 text-xs font-medium bg-green-900/60 text-green-400 border border-green-700/50 rounded-full px-3 py-1">
-                    Fait aujourd&apos;hui ✓
-                  </span>
-                )}
-              </div>
-              <Link
-                href={`/seance/${day.jour}`}
-                className={`inline-flex items-center justify-center w-full rounded-lg py-2.5 text-sm font-semibold text-white transition-colors ${day.buttonColor}`}
+              {/* Header row — always visible, tap to expand */}
+              <button
+                onClick={() => toggle(day.jour)}
+                className="w-full flex items-center justify-between px-5 py-4 text-left active:bg-white/5 transition-colors"
               >
-                {isDone ? 'Revoir la séance' : 'Commencer'}
-              </Link>
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-white text-base">{day.label}</span>
+                      {isDone && (
+                        <span className="text-xs font-medium text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-2 py-0.5">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-500 text-sm mt-0.5">{day.groupes.join(' · ')}</p>
+                  </div>
+                </div>
+                <ChevronDownIcon open={isOpen} />
+              </button>
+
+              {/* Expanded content */}
+              {isOpen && (
+                <div className="px-5 pb-4 border-t border-white/5">
+                  <div className="flex flex-wrap gap-2 mt-3 mb-4">
+                    {day.groupes.map((g) => (
+                      <span
+                        key={g}
+                        className="text-xs font-medium text-gray-300 bg-white/8 border border-white/10 rounded-full px-3 py-1"
+                      >
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+                  <Link
+                    href={`/seance/${day.jour}`}
+                    className="flex items-center justify-center w-full py-3 rounded-xl bg-white text-black font-semibold text-sm transition-opacity active:opacity-70"
+                  >
+                    {isDone ? 'Revoir la séance' : 'Commencer'}
+                  </Link>
+                </div>
+              )}
             </div>
           )
         })}
+      </div>
+
+      {/* Floating action button */}
+      <div className="fixed bottom-6 right-4 flex items-center gap-2">
+        <span className="text-xs text-gray-400 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 shadow-lg">
+          Ajouter un exercice
+        </span>
+        <button
+          className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center text-white text-xl font-light hover:bg-white/20 transition-all active:scale-95"
+          aria-label="Ajouter un exercice"
+        >
+          +
+        </button>
       </div>
     </div>
   )

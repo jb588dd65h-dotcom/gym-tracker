@@ -33,12 +33,6 @@ function formatDate(dateStr: string): string {
   return `${day}/${month}`
 }
 
-function avgReps(log: WorkoutLogWithExercise): number | null {
-  const vals = [log.serie1_reps, log.serie2_reps, log.serie3_reps].filter((v) => v != null) as number[]
-  if (vals.length === 0) return null
-  return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload || payload.length === 0) return null
@@ -46,17 +40,14 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!entry) return null
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-xs shadow-xl min-w-[140px]">
-      <p className="text-gray-300 font-semibold mb-2">{label}</p>
-      <p className="text-yellow-400 font-bold mb-1">{entry.poids} kg</p>
-      <div className="text-gray-400 space-y-0.5">
-        <p>S1: <span className="text-white">{entry.serie1 ?? '—'}</span></p>
-        <p>S2: <span className="text-white">{entry.serie2 ?? '—'}</span></p>
-        <p>S3: <span className="text-white">{entry.serie3 ?? '—'}</span></p>
+    <div className="bg-[#1A1A1A] border border-white/10 rounded-xl p-3 text-xs shadow-xl min-w-[140px]">
+      <p className="text-gray-400 font-semibold mb-2">{label}</p>
+      <p className="text-yellow-400 font-bold text-sm mb-1.5">{entry.poids} kg</p>
+      <div className="text-gray-500 space-y-0.5">
+        <p>S1: <span className="text-gray-200">{entry.serie1 ?? '—'}</span></p>
+        <p>S2: <span className="text-gray-200">{entry.serie2 ?? '—'}</span></p>
+        <p>S3: <span className="text-gray-200">{entry.serie3 ?? '—'}</span></p>
       </div>
-      {entry.moyReps != null && (
-        <p className="text-emerald-400 mt-1.5 font-medium">Moy: {entry.moyReps} reps</p>
-      )}
     </div>
   )
 }
@@ -80,7 +71,6 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
         serie1: log.serie1_reps,
         serie2: log.serie2_reps,
         serie3: log.serie3_reps,
-        moyReps: avgReps(log),
       })),
     [filteredLogs]
   )
@@ -95,7 +85,7 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
   const tooFewData = uniqueDates < 2
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
+    <div className="bg-[#1A1A1A] border border-white/8 rounded-2xl p-4 mb-4">
       <div className="flex items-start justify-between mb-3">
         <h3 className="font-semibold text-white text-sm flex-1 pr-2">{exerciseName}</h3>
         <div className="flex gap-1 shrink-0">
@@ -103,10 +93,10 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
             <button
               key={f}
               onClick={() => setTimeFilter(f)}
-              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+              className={`px-2 py-1 rounded-lg text-xs font-medium transition-all duration-200 ${
                 timeFilter === f
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  ? 'bg-white text-black'
+                  : 'bg-white/8 text-gray-500 hover:text-white'
               }`}
             >
               {f}
@@ -128,7 +118,7 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
       ) : (
         <>
           <ResponsiveContainer width="100%" height={200}>
-            <ComposedChart data={chartData} margin={{ top: 8, right: 40, bottom: 0, left: -10 }}>
+            <ComposedChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
               <XAxis
                 dataKey="date"
@@ -136,6 +126,7 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
                 tickLine={false}
                 axisLine={false}
               />
+              {/* Visible left axis for weight */}
               <YAxis
                 yAxisId="weight"
                 orientation="left"
@@ -143,26 +134,24 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
                 tickLine={false}
                 axisLine={false}
                 domain={['auto', 'auto']}
-                width={36}
+                width={45}
               />
+              {/* Hidden right axis anchors the reps reference band */}
               <YAxis
                 yAxisId="reps"
                 orientation="right"
-                tick={{ fill: '#34d399', fontSize: 10 }}
-                tickLine={false}
-                axisLine={false}
+                hide
                 domain={[0, 20]}
-                width={24}
               />
               <Tooltip content={<CustomTooltip />} />
+              {/* Subtle green band for target rep zone — fill only, no border lines */}
               <ReferenceArea
                 yAxisId="reps"
                 y1={6}
                 y2={13}
                 fill="#22c55e"
-                fillOpacity={0.08}
-                stroke="#22c55e"
-                strokeOpacity={0.2}
+                fillOpacity={0.06}
+                stroke="none"
               />
               <Line
                 yAxisId="weight"
@@ -174,21 +163,11 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
                 activeDot={{ r: 5 }}
                 name="Poids (kg)"
               />
-              <Line
-                yAxisId="reps"
-                type="monotone"
-                dataKey="moyReps"
-                stroke="#34d399"
-                strokeWidth={1.5}
-                dot={{ r: 3, fill: '#34d399', strokeWidth: 0 }}
-                activeDot={{ r: 4 }}
-                name="Moy reps"
-              />
             </ComposedChart>
           </ResponsiveContainer>
 
           {lastWeight != null && (
-            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-800">
+            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/5">
               <div>
                 <p className="text-xs text-gray-500">Dernière charge</p>
                 <p className="text-yellow-400 font-bold text-lg">{lastWeight} kg</p>
@@ -246,10 +225,10 @@ export default function ProgressionPage() {
           <button
             key={groupe}
             onClick={() => setActiveTab(groupe)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
               activeTab === groupe
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+                ? 'bg-white text-black'
+                : 'bg-white/8 border border-white/10 text-gray-400 hover:text-white'
             }`}
           >
             {groupe}
@@ -259,12 +238,12 @@ export default function ProgressionPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-400 text-sm">Chargement...</div>
+          <div className="text-gray-600 text-sm">Chargement...</div>
         </div>
       ) : activeExercises.length === 0 ? (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-          <p className="text-gray-400 text-sm">Pas encore de données pour {activeTab}</p>
-          <p className="text-gray-600 text-xs mt-1">Enregistrez vos séances pour voir votre progression</p>
+        <div className="bg-[#1A1A1A] border border-white/8 rounded-2xl p-8 text-center">
+          <p className="text-gray-500 text-sm">Pas encore de données pour {activeTab}</p>
+          <p className="text-gray-700 text-xs mt-1">Enregistrez vos séances pour voir votre progression</p>
         </div>
       ) : (
         <div>
