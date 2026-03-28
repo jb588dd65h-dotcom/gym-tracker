@@ -108,6 +108,11 @@ export default function SessionClient({
   async function handleSave() {
     setSaving(true)
     try {
+      // Compute the real current local date at save time — never use the server-rendered
+      // `today` prop here, as it was frozen at page-load and uses UTC (wrong timezone).
+      const now = new Date()
+      const saveDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
       const logsToUpsert = []
 
       for (const exercise of exercises) {
@@ -120,7 +125,7 @@ export default function SessionClient({
         if (s1 === null && s2 === null && s3 === null) continue
 
         logsToUpsert.push({
-          session_date: today,
+          session_date: saveDate,
           exercise_id: exercise.id,
           poids: s.poids,
           serie1_reps: s1,
@@ -137,13 +142,13 @@ export default function SessionClient({
         return
       }
 
-      // Delete existing logs for today for this day's exercises
+      // Delete any existing logs for this exact date before re-inserting
       const exerciseIds = exercises.map((e) => e.id)
       await supabase
         .from('workout_logs')
         .delete()
         .in('exercise_id', exerciseIds)
-        .eq('session_date', today)
+        .eq('session_date', saveDate)
 
       const { error } = await supabase.from('workout_logs').insert(logsToUpsert)
 
