@@ -69,15 +69,17 @@ export default function SessionClient({
     const state: Record<number, ExerciseState> = {}
     for (const exercise of exercises) {
       const lastLog = exercise.lastLog
+      // Pre-fill reps only when editing today's existing session, not from a previous session
+      const isTodayLog = lastLog?.session_date === today
       state[exercise.id] = {
         poids: lastLog ? lastLog.poids : exercise.poids_initial,
-        serie1: lastLog?.serie1_reps != null ? String(lastLog.serie1_reps) : '',
-        serie2: lastLog?.serie2_reps != null ? String(lastLog.serie2_reps) : '',
-        serie3: lastLog?.serie3_reps != null ? String(lastLog.serie3_reps) : '',
+        serie1: isTodayLog && lastLog?.serie1_reps != null ? String(lastLog.serie1_reps) : '',
+        serie2: isTodayLog && lastLog?.serie2_reps != null ? String(lastLog.serie2_reps) : '',
+        serie3: isTodayLog && lastLog?.serie3_reps != null ? String(lastLog.serie3_reps) : '',
       }
     }
     return state
-  }, [exercises])
+  }, [exercises, today])
 
   const [states, setStates] = useState<Record<number, ExerciseState>>(initialState)
   const [saving, setSaving] = useState(false)

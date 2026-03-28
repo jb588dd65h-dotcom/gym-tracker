@@ -90,7 +90,9 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
   const weightDiff = lastWeight != null && prevWeight != null ? lastWeight - prevWeight : null
   const weightPct = weightDiff != null && prevWeight ? ((weightDiff / prevWeight) * 100).toFixed(1) : null
 
-  const tooFewData = filteredLogs.length < 2
+  // Need at least 2 distinct session dates to draw a meaningful chart
+  const uniqueDates = new Set(filteredLogs.map((l) => l.session_date)).size
+  const tooFewData = uniqueDates < 2
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
@@ -112,6 +114,12 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
           ))}
         </div>
       </div>
+
+      {/* DEBUG: remove once data is verified */}
+      <p className="text-xs text-gray-600 mb-2">
+        {logs.length} log(s) total · {new Set(logs.map((l) => l.session_date)).size} date(s) distincte(s)
+        {timeFilter !== 'Tout' && ` · ${filteredLogs.length} dans la période`}
+      </p>
 
       {tooFewData ? (
         <p className="text-gray-500 text-sm py-4 text-center">
