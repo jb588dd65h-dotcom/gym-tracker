@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Jour, ExerciseWithLog } from '@/lib/types'
@@ -19,6 +20,10 @@ export default async function SeancePage({
 }: {
   params: { jour: string }
 }) {
+  // Explicitly opt out of Next.js data cache so every request fetches
+  // fresh exercises from Supabase (force-dynamic alone isn't always enough).
+  noStore()
+
   const jour = params.jour as Jour
 
   if (!validJours.includes(jour)) {
