@@ -1,101 +1,113 @@
-import Image from "next/image";
+import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
+import { Jour } from '@/lib/types'
 
-export default function Home() {
+export const dynamic = 'force-dynamic'
+
+const days: {
+  jour: Jour
+  label: string
+  groupes: string[]
+  color: string
+  borderColor: string
+  buttonColor: string
+}[] = [
+  {
+    jour: 'lundi',
+    label: 'Lundi',
+    groupes: ['Épaules'],
+    color: 'bg-blue-950/40',
+    borderColor: 'border-blue-800/50',
+    buttonColor: 'bg-blue-600 hover:bg-blue-500',
+  },
+  {
+    jour: 'mardi',
+    label: 'Mardi',
+    groupes: ['Biceps', 'Dos'],
+    color: 'bg-purple-950/40',
+    borderColor: 'border-purple-800/50',
+    buttonColor: 'bg-purple-600 hover:bg-purple-500',
+  },
+  {
+    jour: 'vendredi',
+    label: 'Vendredi',
+    groupes: ['Triceps', 'Pecs'],
+    color: 'bg-orange-950/40',
+    borderColor: 'border-orange-800/50',
+    buttonColor: 'bg-orange-600 hover:bg-orange-500',
+  },
+  {
+    jour: 'samedi',
+    label: 'Samedi',
+    groupes: ['Jambes'],
+    color: 'bg-green-950/40',
+    borderColor: 'border-green-800/50',
+    buttonColor: 'bg-green-600 hover:bg-green-500',
+  },
+]
+
+async function getTodayLogs(): Promise<Set<string>> {
+  const today = new Date().toISOString().split('T')[0]
+
+  const { data, error } = await supabase
+    .from('workout_logs')
+    .select('exercise_id, exercises(jour)')
+    .eq('session_date', today)
+
+  if (error || !data) {
+    return new Set()
+  }
+
+  const joursLogged = new Set<string>()
+  for (const log of data) {
+    const exercise = log.exercises as unknown as { jour: string } | null
+    if (exercise?.jour) {
+      joursLogged.add(exercise.jour)
+    }
+  }
+
+  return joursLogged
+}
+
+export default async function HomePage() {
+  const joursLogged = await getTodayLogs()
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div>
+      <h1 className="text-2xl font-bold mb-2">Séances du jour</h1>
+      <p className="text-gray-400 text-sm mb-6">Choisissez votre entraînement</p>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <div className="flex flex-col gap-4">
+        {days.map((day) => {
+          const isDone = joursLogged.has(day.jour)
+          return (
+            <div
+              key={day.jour}
+              className={`rounded-xl border p-5 ${day.color} ${day.borderColor}`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h2 className="text-lg font-semibold">{day.label}</h2>
+                  <p className="text-gray-400 text-sm mt-0.5">
+                    {day.groupes.join(' · ')}
+                  </p>
+                </div>
+                {isDone && (
+                  <span className="flex items-center gap-1 text-xs font-medium bg-green-900/60 text-green-400 border border-green-700/50 rounded-full px-3 py-1">
+                    Fait aujourd&apos;hui ✓
+                  </span>
+                )}
+              </div>
+              <Link
+                href={`/seance/${day.jour}`}
+                className={`inline-flex items-center justify-center w-full rounded-lg py-2.5 text-sm font-semibold text-white transition-colors ${day.buttonColor}`}
+              >
+                {isDone ? 'Revoir la séance' : 'Commencer'}
+              </Link>
+            </div>
+          )
+        })}
+      </div>
     </div>
-  );
+  )
 }
