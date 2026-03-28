@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Jour } from '@/lib/types'
 import { AddExerciseModal } from './components/AddExerciseModal'
@@ -27,6 +28,7 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 }
 
 export default function HomePage() {
+  const router = useRouter()
   const [expanded, setExpanded] = useState<Jour | null>(null)
   const [joursLogged, setJoursLogged] = useState<Set<string>>(new Set())
   const [showAddModal, setShowAddModal] = useState(false)
@@ -35,6 +37,10 @@ export default function HomePage() {
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
+    // Bust the Next.js router cache so the session pages re-fetch from
+    // Supabase on next navigation (they may have been prefetched before
+    // the new exercise was inserted).
+    router.refresh()
   }
 
   useEffect(() => {
