@@ -37,23 +37,34 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
   const [repos, setRepos] = useState('')
 
   const [existingGroupes, setExistingGroupes] = useState<string[]>([])
+  const [groupesLoading, setGroupesLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Fetch existing groups from Supabase when a day is selected
+  // Fetch DISTINCT groupe_musculaire values for the selected day
   useEffect(() => {
-    if (!jour) { setExistingGroupes([]); return }
+    if (!jour) {
+      setExistingGroupes([])
+      return
+    }
+    setGroupesLoading(true)
     supabase
       .from('exercises')
       .select('groupe_musculaire')
       .eq('jour', jour)
       .then(({ data }) => {
+        setGroupesLoading(false)
         if (!data) return
-        const seen = new Set<string>()
+        // Deduplicate: build ordered unique list of group names
+        const seen: Record<string, true> = {}
         const unique: string[] = []
-        for (const d of data) {
-          const g = d.groupe_musculaire as string
-          if (!seen.has(g)) { seen.add(g); unique.push(g) }
+        for (const row of data) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const g = String((row as any).groupe_musculaire ?? '').trim()
+          if (g && !seen[g]) {
+            seen[g] = true
+            unique.push(g)
+          }
         }
         setExistingGroupes(unique)
       })
@@ -66,6 +77,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
     setUseCustomGroupe(false)
     setCustomGroupe('')
     setExistingGroupes([])
+    setGroupesLoading(false)
     setName('')
     setWeight('')
     setS1('12')
@@ -261,18 +273,22 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
           {/* ── Step 2: Muscle group ── */}
           {step === 2 && selectedDay && (
             <div className="flex flex-col gap-3">
-              {existingGroupes.map((g) => (
-                <button
-                  key={g}
-                  onClick={() => selectGroupe(g)}
-                  className="flex items-center justify-between w-full bg-[#1A1A1A] border border-white/8 rounded-2xl px-5 py-4 text-left hover:bg-white/5 active:scale-[0.98] transition-all"
-                >
-                  <span className="font-semibold text-white">{g}</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              ))}
+              {groupesLoading ? (
+                <p className="text-gray-600 text-sm text-center py-4">Chargement...</p>
+              ) : existingGroupes.length > 0 ? (
+                existingGroupes.map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => selectGroupe(g)}
+                    className="flex items-center justify-between w-full bg-[#1A1A1A] border border-white/8 rounded-2xl px-5 py-4 text-left hover:bg-white/5 active:scale-[0.98] transition-all"
+                  >
+                    <span className="font-semibold text-white">{g}</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                ))
+              ) : null}
 
               {/* New custom group */}
               <div className="bg-[#1A1A1A] border border-dashed border-white/15 rounded-2xl px-5 py-4">
