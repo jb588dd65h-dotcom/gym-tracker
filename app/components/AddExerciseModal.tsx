@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Jour } from '@/lib/types'
 
@@ -14,7 +14,7 @@ const DAYS: { jour: Jour; label: string }[] = [
   { jour: 'dimanche', label: 'Dimanche' },
 ]
 
-type Step = 1 | 2 | 3
+type Step = 1 | 2 | 3 | 4
 
 interface Props {
   open: boolean
@@ -36,39 +36,16 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
   const [s3, setS3] = useState('10')
   const [repos, setRepos] = useState('')
 
-  const [existingGroupes, setExistingGroupes] = useState<string[]>([])
-  const [groupesLoading, setGroupesLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Fetch DISTINCT groupe_musculaire values for the selected day
-  useEffect(() => {
-    if (!jour) {
-      setExistingGroupes([])
-      return
-    }
-    setGroupesLoading(true)
-    supabase
-      .from('exercises')
-      .select('groupe_musculaire')
-      .eq('jour', jour)
-      .then(({ data }) => {
-        setGroupesLoading(false)
-        if (!data) return
-        // Deduplicate: build ordered unique list of group names
-        const seen: Record<string, true> = {}
-        const unique: string[] = []
-        for (const row of data) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const g = String((row as any).groupe_musculaire ?? '').trim()
-          if (g && !seen[g]) {
-            seen[g] = true
-            unique.push(g)
-          }
-        }
-        setExistingGroupes(unique)
-      })
-  }, [jour])
+  // Step 4: manage (delete) exercises
+  const [manageJour, setManageJour] = useState<Jour | null>(null)
+  const [manageExercises, setManageExercises] = useState<{ id: number; exercice: string; groupe_musculaire: string }[]>([])
+  const [manageLoading, setManageLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; exercice: string } | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
 
   function reset() {
     setStep(1)
@@ -76,8 +53,6 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
     setGroupe(null)
     setUseCustomGroupe(false)
     setCustomGroupe('')
-    setExistingGroupes([])
-    setGroupesLoading(false)
     setName('')
     setWeight('')
     setS1('12')
@@ -85,6 +60,36 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
     setS3('10')
     setRepos('')
     setSaveError(null)
+    setManageJour(null)
+    setManageExercises([])
+    setManageLoading(false)
+    setDeleteTarget(null)
+    setDeleting(false)
+  }
+
+  async function openManage(j: Jour) {
+    setManageJour(j)
+    setManageLoading(true)
+    setStep(4)
+    const { data } = await supabase
+      .from('exercises')
+      .select('id, exercice, groupe_musculaire')
+      .eq('jour', j)
+      .order('ordre')
+    setManageLoading(false)
+    setManageExercises(data ?? [])
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const { error } = await supabase.from('exercises').delete().eq('id', deleteTarget.id)
+    setDeleting(false)
+    if (!error) {
+      setManageExercises((prev) => prev.filter((e) => e.id !== deleteTarget.id))
+      onSaved?.()
+    }
+    setDeleteTarget(null)
   }
 
   function handleClose() {
@@ -98,11 +103,15 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
       setGroupe(null)
       setUseCustomGroupe(false)
       setCustomGroupe('')
-      setExistingGroupes([])
       setJour(null)
       setStep(1)
     } else if (step === 3) {
       setStep(2)
+    } else if (step === 4) {
+      setManageJour(null)
+      setManageExercises([])
+      setDeleteTarget(null)
+      setStep(1)
     }
   }
 
@@ -111,12 +120,6 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
     setGroupe(null)
     setUseCustomGroupe(false)
     setStep(2)
-  }
-
-  function selectGroupe(g: string) {
-    setGroupe(g)
-    setUseCustomGroupe(false)
-    setStep(3)
   }
 
   function confirmCustomGroupe() {
@@ -184,6 +187,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
     1: 'Quel jour ?',
     2: 'Groupe musculaire',
     3: "Détails de l'exercice",
+    4: `Gérer — ${DAYS.find((d) => d.jour === manageJour)?.label ?? ''}`,
   }
 
   return (
@@ -237,17 +241,19 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
           </button>
         </div>
 
-        {/* Progress bar */}
-        <div className="flex gap-1.5 px-5 pb-4 shrink-0">
-          {([1, 2, 3] as Step[]).map((s) => (
-            <div
-              key={s}
-              className={`h-[3px] flex-1 rounded-full transition-all duration-300 ${
-                s <= step ? 'bg-white' : 'bg-white/10'
-              }`}
-            />
-          ))}
-        </div>
+        {/* Progress bar (hidden in manage mode) */}
+        {step !== 4 && (
+          <div className="flex gap-1.5 px-5 pb-4 shrink-0">
+            {([1, 2, 3] as Step[]).map((s) => (
+              <div
+                key={s}
+                className={`h-[3px] flex-1 rounded-full transition-all duration-300 ${
+                  s <= step ? 'bg-white' : 'bg-white/10'
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 pb-8">
@@ -256,16 +262,30 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
           {step === 1 && (
             <div className="flex flex-col gap-3">
               {DAYS.map((day) => (
-                <button
-                  key={day.jour}
-                  onClick={() => selectJour(day.jour)}
-                  className="flex items-center justify-between w-full bg-[#1A1A1A] border border-white/8 rounded-2xl px-5 py-4 text-left hover:bg-white/5 active:scale-[0.98] transition-all"
-                >
-                  <p className="font-semibold text-white">{day.label}</p>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
+                <div key={day.jour} className="flex gap-2">
+                  <button
+                    onClick={() => selectJour(day.jour)}
+                    className="flex items-center justify-between flex-1 bg-[#1A1A1A] border border-white/8 rounded-2xl px-5 py-4 text-left hover:bg-white/5 active:scale-[0.98] transition-all"
+                  >
+                    <p className="font-semibold text-white">{day.label}</p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => openManage(day.jour)}
+                    className="flex items-center justify-center w-12 bg-[#1A1A1A] border border-white/8 rounded-2xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 active:scale-[0.98] transition-all"
+                    aria-label={`Gérer les exercices de ${day.label}`}
+                    title="Gérer / supprimer"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                    </svg>
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -273,42 +293,22 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
           {/* ── Step 2: Muscle group ── */}
           {step === 2 && selectedDay && (
             <div className="flex flex-col gap-3">
-              {groupesLoading ? (
-                <p className="text-gray-600 text-sm text-center py-4">Chargement...</p>
-              ) : existingGroupes.length > 0 ? (
-                existingGroupes.map((g) => (
-                  <button
-                    key={g}
-                    onClick={() => selectGroupe(g)}
-                    className="flex items-center justify-between w-full bg-[#1A1A1A] border border-white/8 rounded-2xl px-5 py-4 text-left hover:bg-white/5 active:scale-[0.98] transition-all"
-                  >
-                    <span className="font-semibold text-white">{g}</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </button>
-                ))
-              ) : null}
-
-              {/* New custom group */}
-              <div className="bg-[#1A1A1A] border border-dashed border-white/15 rounded-2xl px-5 py-4">
-                <p className="text-sm text-gray-400 font-medium mb-3">Nouveau groupe</p>
-                <input
-                  type="text"
-                  value={customGroupe}
-                  onChange={(e) => setCustomGroupe(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && confirmCustomGroupe()}
-                  placeholder="ex: Abdos, Mollets..."
-                  className="w-full bg-[#111] border border-white/8 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/25 transition-colors text-sm"
-                />
-                <button
-                  onClick={confirmCustomGroupe}
-                  disabled={!customGroupe.trim()}
-                  className="mt-3 w-full py-2.5 rounded-xl bg-white/10 border border-white/10 text-white font-medium text-sm disabled:opacity-30 hover:bg-white/15 transition-all"
-                >
-                  Utiliser ce groupe →
-                </button>
-              </div>
+              <input
+                type="text"
+                value={customGroupe}
+                onChange={(e) => setCustomGroupe(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && confirmCustomGroupe()}
+                placeholder="ex: Biceps, Dos, Abdos..."
+                autoFocus
+                className="w-full bg-[#1A1A1A] border border-white/8 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-white/25 transition-colors"
+              />
+              <button
+                onClick={confirmCustomGroupe}
+                disabled={!customGroupe.trim()}
+                className="w-full py-4 rounded-2xl font-semibold text-base bg-white text-black hover:bg-gray-100 active:scale-[0.98] disabled:opacity-30 transition-all"
+              >
+                Continuer →
+              </button>
             </div>
           )}
 
@@ -412,8 +412,76 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
             </div>
           )}
 
+          {/* ── Step 4: Manage / delete exercises ── */}
+          {step === 4 && (
+            <div className="flex flex-col gap-3">
+              {manageLoading ? (
+                <p className="text-gray-600 text-sm text-center py-6">Chargement...</p>
+              ) : manageExercises.length === 0 ? (
+                <p className="text-gray-600 text-sm text-center py-6">Aucun exercice pour ce jour.</p>
+              ) : (
+                manageExercises.map((ex) => (
+                  <div
+                    key={ex.id}
+                    className="flex items-center justify-between bg-[#1A1A1A] border border-white/8 rounded-2xl px-5 py-4"
+                  >
+                    <div className="min-w-0 flex-1 pr-3">
+                      <p className="font-semibold text-white truncate">{ex.exercice}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{ex.groupe_musculaire}</p>
+                    </div>
+                    <button
+                      onClick={() => setDeleteTarget({ id: ex.id, exercice: ex.exercice })}
+                      className="shrink-0 p-2 rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      aria-label={`Supprimer ${ex.exercice}`}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                      </svg>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
         </div>
       </div>
+
+      {/* Delete confirmation modal (for manage step) */}
+      {deleteTarget && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]"
+            onClick={() => !deleting && setDeleteTarget(null)}
+          />
+          <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[70] bg-[#1A1A1A] border border-white/10 rounded-2xl p-6 shadow-2xl max-w-sm mx-auto">
+            <h3 className="text-white font-semibold text-base mb-2">Supprimer l&apos;exercice ?</h3>
+            <p className="text-gray-400 text-sm mb-1">
+              <span className="text-white font-medium">{deleteTarget.exercice}</span>
+            </p>
+            <p className="text-gray-600 text-xs mb-6">Cette action est irréversible. Toutes les données d&apos;entraînement associées seront supprimées.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl bg-white/8 border border-white/8 text-gray-300 text-sm font-medium hover:bg-white/12 transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Suppression...' : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </>
   )
 }

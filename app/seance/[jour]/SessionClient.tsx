@@ -4,6 +4,17 @@ import { useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { ExerciseWithLog, Jour } from '@/lib/types'
 
+function TrashIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+    </svg>
+  )
+}
+
 interface ExerciseState {
   poids: number
   serie1: string
@@ -81,9 +92,26 @@ export default function SessionClient({
     return state
   }, [exercises, today])
 
+  const [exerciseList, setExerciseList] = useState<ExerciseWithLog[]>(exercises)
   const [states, setStates] = useState<Record<number, ExerciseState>>(initialState)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<ExerciseWithLog | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const { error } = await supabase.from('exercises').delete().eq('id', deleteTarget.id)
+    setDeleting(false)
+    if (error) {
+      setToast({ message: 'Erreur lors de la suppression', type: 'error' })
+      setTimeout(() => setToast(null), 3000)
+    } else {
+      setExerciseList((prev) => prev.filter((e) => e.id !== deleteTarget.id))
+    }
+    setDeleteTarget(null)
+  }
 
   function updateState(id: number, field: keyof ExerciseState, value: string | number) {
     setStates((prev) => ({
@@ -165,10 +193,12 @@ export default function SessionClient({
     }
   }
 
-  const exercisesByGroupe = groupes.map((groupe) => ({
-    groupe,
-    exercises: exercises.filter((e) => e.groupe_musculaire === groupe),
-  }))
+  const exercisesByGroupe = groupes
+    .map((groupe) => ({
+      groupe,
+      exercises: exerciseList.filter((e) => e.groupe_musculaire === groupe),
+    }))
+    .filter(({ exercises: ex }) => ex.length > 0)
 
   return (
     <div className="pb-28">
@@ -204,17 +234,26 @@ export default function SessionClient({
                   key={exercise.id}
                   className="bg-gray-900 border border-gray-800 rounded-xl p-4"
                 >
-                  {/* Exercise name + rest */}
+                  {/* Exercise name + rest + delete */}
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-semibold text-white flex-1 pr-2">{exercise.exercice}</h3>
-                    {exercise.repos && (
-                      <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-800 rounded-full px-2 py-0.5 shrink-0">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {exercise.repos}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {exercise.repos && (
+                        <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-800 rounded-full px-2 py-0.5">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {exercise.repos}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => setDeleteTarget(exercise)}
+                        className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        aria-label="Supprimer l'exercice"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Target hint */}
@@ -307,6 +346,39 @@ export default function SessionClient({
         >
           {toast.message}
         </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+            onClick={() => !deleting && setDeleteTarget(null)}
+          />
+          <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-[#1A1A1A] border border-white/10 rounded-2xl p-6 shadow-2xl max-w-sm mx-auto">
+            <h3 className="text-white font-semibold text-base mb-2">Supprimer l&apos;exercice ?</h3>
+            <p className="text-gray-400 text-sm mb-1">
+              <span className="text-white font-medium">{deleteTarget.exercice}</span>
+            </p>
+            <p className="text-gray-600 text-xs mb-6">Cette action est irréversible. Toutes les données d&apos;entraînement associées seront supprimées.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl bg-white/8 border border-white/8 text-gray-300 text-sm font-medium hover:bg-white/12 transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Suppression...' : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )
