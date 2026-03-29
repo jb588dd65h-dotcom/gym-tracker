@@ -1,4 +1,4 @@
-export type Jour = 'lundi' | 'mardi' | 'vendredi' | 'samedi'
+export type Jour = 'lundi' | 'mardi' | 'mercredi' | 'jeudi' | 'vendredi' | 'samedi' | 'dimanche'
 
 export interface Exercise {
   id: number

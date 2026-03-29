@@ -7,13 +7,16 @@ import SessionClient from './SessionClient'
 export const dynamic = 'force-dynamic'
 
 const jourLabels: Record<Jour, string> = {
-  lundi: 'Lundi',
-  mardi: 'Mardi',
+  lundi:    'Lundi',
+  mardi:    'Mardi',
+  mercredi: 'Mercredi',
+  jeudi:    'Jeudi',
   vendredi: 'Vendredi',
-  samedi: 'Samedi',
+  samedi:   'Samedi',
+  dimanche: 'Dimanche',
 }
 
-const validJours: Jour[] = ['lundi', 'mardi', 'vendredi', 'samedi']
+const validJours: Jour[] = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
 export default async function SeancePage({
   params,

@@ -1,14 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Jour } from '@/lib/types'
 
-const DAYS: { jour: Jour; label: string; groupes: string[] }[] = [
-  { jour: 'lundi',    label: 'Lundi',    groupes: ['Épaules'] },
-  { jour: 'mardi',    label: 'Mardi',    groupes: ['Biceps', 'Dos'] },
-  { jour: 'vendredi', label: 'Vendredi', groupes: ['Triceps', 'Pecs'] },
-  { jour: 'samedi',   label: 'Samedi',   groupes: ['Jambes'] },
+const DAYS: { jour: Jour; label: string }[] = [
+  { jour: 'lundi',    label: 'Lundi' },
+  { jour: 'mardi',    label: 'Mardi' },
+  { jour: 'mercredi', label: 'Mercredi' },
+  { jour: 'jeudi',    label: 'Jeudi' },
+  { jour: 'vendredi', label: 'Vendredi' },
+  { jour: 'samedi',   label: 'Samedi' },
+  { jour: 'dimanche', label: 'Dimanche' },
 ]
 
 type Step = 1 | 2 | 3
@@ -33,8 +36,28 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
   const [s3, setS3] = useState('10')
   const [repos, setRepos] = useState('')
 
+  const [existingGroupes, setExistingGroupes] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  // Fetch existing groups from Supabase when a day is selected
+  useEffect(() => {
+    if (!jour) { setExistingGroupes([]); return }
+    supabase
+      .from('exercises')
+      .select('groupe_musculaire')
+      .eq('jour', jour)
+      .then(({ data }) => {
+        if (!data) return
+        const seen = new Set<string>()
+        const unique: string[] = []
+        for (const d of data) {
+          const g = d.groupe_musculaire as string
+          if (!seen.has(g)) { seen.add(g); unique.push(g) }
+        }
+        setExistingGroupes(unique)
+      })
+  }, [jour])
 
   function reset() {
     setStep(1)
@@ -42,6 +65,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
     setGroupe(null)
     setUseCustomGroupe(false)
     setCustomGroupe('')
+    setExistingGroupes([])
     setName('')
     setWeight('')
     setS1('12')
@@ -62,6 +86,8 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
       setGroupe(null)
       setUseCustomGroupe(false)
       setCustomGroupe('')
+      setExistingGroupes([])
+      setJour(null)
       setStep(1)
     } else if (step === 3) {
       setStep(2)
@@ -223,10 +249,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
                   onClick={() => selectJour(day.jour)}
                   className="flex items-center justify-between w-full bg-[#1A1A1A] border border-white/8 rounded-2xl px-5 py-4 text-left hover:bg-white/5 active:scale-[0.98] transition-all"
                 >
-                  <div>
-                    <p className="font-semibold text-white">{day.label}</p>
-                    <p className="text-sm text-gray-500 mt-0.5">{day.groupes.join(' · ')}</p>
-                  </div>
+                  <p className="font-semibold text-white">{day.label}</p>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
@@ -238,7 +261,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
           {/* ── Step 2: Muscle group ── */}
           {step === 2 && selectedDay && (
             <div className="flex flex-col gap-3">
-              {selectedDay.groupes.map((g) => (
+              {existingGroupes.map((g) => (
                 <button
                   key={g}
                   onClick={() => selectGroupe(g)}
