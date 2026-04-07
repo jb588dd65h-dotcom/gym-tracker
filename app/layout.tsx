@@ -18,10 +18,10 @@ export default function RootLayout({
   return (
     <html lang="fr" className="dark">
       <body className={`${inter.className} bg-[#0F0F0F] text-white min-h-screen`}>
-        <NavBar />
         <main className="max-w-2xl mx-auto px-4 py-6">
           {children}
         </main>
+        <NavBar />
       </body>
     </html>
   )

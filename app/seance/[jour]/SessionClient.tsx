@@ -201,7 +201,7 @@ export default function SessionClient({
     .filter(({ exercises: ex }) => ex.length > 0)
 
   return (
-    <div className="pb-28">
+    <div className="pb-48">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">{jourLabel}</h1>
@@ -323,7 +323,7 @@ export default function SessionClient({
       ))}
 
       {/* Sticky save button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#0F0F0F] via-[#0F0F0F]/95 to-transparent">
+      <div className="fixed bottom-20 left-0 right-0 p-4 bg-gradient-to-t from-[#0F0F0F] via-[#0F0F0F]/95 to-transparent">
         <div className="max-w-2xl mx-auto">
           <button
             onClick={handleSave}
@@ -338,7 +338,7 @@ export default function SessionClient({
       {/* Toast notification */}
       {toast && (
         <div
-          className={`fixed bottom-24 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm font-medium shadow-lg z-50 transition-all ${
+          className={`fixed bottom-[200px] left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl text-sm font-medium shadow-lg z-50 transition-all ${
             toast.type === 'success'
               ? 'bg-green-800 text-green-100 border border-green-600'
               : 'bg-red-900 text-red-100 border border-red-700'

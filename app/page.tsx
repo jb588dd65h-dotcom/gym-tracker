@@ -131,7 +131,7 @@ export default function HomePage() {
       </div>
 
       {/* Floating action button */}
-      <div className="fixed bottom-6 right-4 flex items-center gap-2">
+      <div className="fixed bottom-[96px] right-4 flex items-center gap-2">
         <span className="text-xs text-gray-400 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 shadow-lg pointer-events-none">
           Ajouter un exercice
         </span>
@@ -160,7 +160,7 @@ export default function HomePage() {
       />
 
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-green-500 text-white text-sm font-semibold shadow-xl whitespace-nowrap">
+        <div className="fixed bottom-[168px] left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-green-500 text-white text-sm font-semibold shadow-xl whitespace-nowrap">
           ✓ {toast}
         </div>
       )}

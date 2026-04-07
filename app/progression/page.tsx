@@ -216,7 +216,7 @@ export default function ProgressionPage() {
   const activeExercises = exercisesByGroup[activeTab] ?? []
 
   return (
-    <div>
+    <div className="pb-20">
       <h1 className="text-2xl font-bold mb-2">Progression</h1>
       <p className="text-gray-400 text-sm mb-5">Suivez vos progrès par groupe musculaire</p>
 
