@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from 'react'
 
-export type MascotState = 'idle' | 'happy' | 'excited' | 'thinking' | 'celebration' | 'sleep'
+export type MascotState = 'idle' | 'happy' | 'excited' | 'thinking' | 'celebration' | 'sleep' | 'bodybuilder'
 
 interface Reaction {
   state: MascotState

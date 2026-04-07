@@ -144,7 +144,7 @@ export default function HomePage() {
         onClose={() => setShowAddModal(false)}
         onSaved={() => {
           showToast(t('exerciseAdded'))
-          mascotTrigger('excited', 'Nouvel exo !')
+          mascotTrigger('happy', 'Nouvel exo !')
           supabase
             .from('exercises')
             .select('jour')

@@ -189,7 +189,7 @@ export default function SessionClient({
         setToast({ message: 'Erreur lors de la sauvegarde', type: 'error' })
       } else {
         setToast({ message: `${logsToUpsert.length} exercice(s) enregistré(s) !`, type: 'success' })
-        mascotTrigger('happy', 'Bravo ! 💪')
+        mascotTrigger('bodybuilder', 'Bravo ! 💪')
       }
     } catch {
       setToast({ message: 'Erreur inattendue', type: 'error' })
