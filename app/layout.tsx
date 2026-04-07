@@ -4,7 +4,6 @@ import { AppProvider } from './providers/AppProvider'
 import { MascotProvider } from './providers/MascotProvider'
 import { Header } from './components/Header'
 import { NavBar } from './components/NavBar'
-import { Mascot } from './components/Mascot'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -29,7 +28,6 @@ export default function RootLayout({
               {children}
             </main>
             <NavBar />
-            <Mascot />
           </MascotProvider>
         </AppProvider>
       </body>

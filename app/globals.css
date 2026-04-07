@@ -62,16 +62,23 @@ body {
 }
 
 @keyframes mascot-bodybuilder {
-  0%   { transform: scale(1)    rotate(0deg);   }
-  10%  { transform: scale(1.9)  rotate(-6deg);  }
-  22%  { transform: scale(3.0)  rotate(4deg);   }
-  35%  { transform: scale(2.95) rotate(-5deg);  }
-  48%  { transform: scale(3.05) rotate(4deg);   }
-  60%  { transform: scale(2.95) rotate(-3deg);  }
-  70%  { transform: scale(0.45) rotate(0deg);   }
-  80%  { transform: scale(1.2)  rotate(0deg);   }
-  90%  { transform: scale(0.94) rotate(0deg);   }
-  100% { transform: scale(1)    rotate(0deg);   }
+  /* shake/vibrate phase: 0–0.32s (~9%) */
+  0%   { transform: scale(1)    rotate(0deg)  translateX(0);    }
+  3%   { transform: scale(1.02) rotate(-5deg) translateX(-3px); }
+  6%   { transform: scale(1.02) rotate(5deg)  translateX(3px);  }
+  9%   { transform: scale(1.02) rotate(-4deg) translateX(-2px); }
+  /* rapid inflate: 9%–28% (0.32s–1.0s) */
+  28%  { transform: scale(3.0)  rotate(0deg)  translateX(0);    }
+  /* hold + pose: 28%–78% (1.0s–2.8s = ~1.8s of flexing) */
+  40%  { transform: scale(2.95) rotate(-5deg); }
+  55%  { transform: scale(3.05) rotate(5deg);  }
+  70%  { transform: scale(3.0)  rotate(-3deg); }
+  78%  { transform: scale(3.0)  rotate(0deg);  }
+  /* EXPLODE back to normal: 78%–100% */
+  87%  { transform: scale(0.35) rotate(0deg);  }
+  93%  { transform: scale(1.25) rotate(0deg);  }
+  97%  { transform: scale(0.9)  rotate(0deg);  }
+  100% { transform: scale(1)    rotate(0deg);  }
 }
 
 @keyframes mascot-excited {
@@ -137,7 +144,7 @@ body {
 .mascot-thinking    { animation: mascot-thinking    1.4s ease-in-out infinite; transform-origin: center bottom; }
 .mascot-celebration { animation: mascot-celebration 2.4s ease-in-out 1;        transform-origin: center bottom; }
 .mascot-sleep       { animation: mascot-sleep       3s   ease-in-out infinite; transform-origin: center bottom; }
-.mascot-bodybuilder { animation: mascot-bodybuilder 2.8s ease-out 1;           transform-origin: center bottom; }
+.mascot-bodybuilder { animation: mascot-bodybuilder 3.6s ease-out 1;           transform-origin: center center; }
 .mascot-wing-anim   { animation: mascot-wing-flap   0.34s ease-in-out 3; }
 
 @layer utilities {

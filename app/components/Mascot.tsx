@@ -10,15 +10,15 @@ function SpeechBubble({ message, fading }: { message: string; fading: boolean })
     <div
       style={{
         position: 'absolute',
-        bottom: 'calc(100% + 12px)',
+        top: 'calc(100% + 8px)',
         right: 0,
         whiteSpace: 'nowrap',
         background: 'rgba(18,18,18,0.94)',
         color: '#fff',
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: 600,
-        padding: '8px 15px',
-        borderRadius: 22,
+        padding: '6px 12px',
+        borderRadius: 18,
         border: '1px solid rgba(255,255,255,0.13)',
         boxShadow: '0 6px 24px rgba(0,0,0,0.45)',
         pointerEvents: 'none',
@@ -29,16 +29,17 @@ function SpeechBubble({ message, fading }: { message: string; fading: boolean })
       }}
     >
       {message}
+      {/* Arrow pointing UP toward the bird */}
       <div
         style={{
           position: 'absolute',
-          bottom: -7,
-          right: 22,
+          top: -7,
+          right: 12,
           width: 0,
           height: 0,
           borderLeft: '7px solid transparent',
           borderRight: '7px solid transparent',
-          borderTop: '7px solid rgba(18,18,18,0.94)',
+          borderBottom: '7px solid rgba(18,18,18,0.94)',
         }}
       />
     </div>
@@ -49,11 +50,11 @@ function SpeechBubble({ message, fading }: { message: string; fading: boolean })
 
 function ZzzBubbles() {
   return (
-    <div style={{ position: 'absolute', bottom: '65%', right: '2%', pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', top: '-28px', right: '0px', pointerEvents: 'none' }}>
       {([
-        { delay: '0s',   size: 11, x: 0,   y: 0   },
-        { delay: '0.9s', size: 14, x: -10, y: -10 },
-        { delay: '1.8s', size: 17, x: -5,  y: -22 },
+        { delay: '0s',   size: 9,  x: 0,   y: 0   },
+        { delay: '0.9s', size: 11, x: -8,  y: -8  },
+        { delay: '1.8s', size: 13, x: -4,  y: -16 },
       ] as const).map(({ delay, size, x, y }, i) => (
         <span
           key={i}
@@ -76,36 +77,35 @@ function ZzzBubbles() {
 }
 
 // ── The Woodcock SVG ──────────────────────────────────────────────────────
-// Chubby round body, small head, long beak right, blue headband + sneakers.
 
-function WoodcockSVG({ wingAnim, sleeping }: { wingAnim: boolean; sleeping: boolean }) {
+function WoodcockSVG({
+  wingAnim,
+  sleeping,
+  muscleMode,
+}: {
+  wingAnim: boolean
+  sleeping: boolean
+  muscleMode: boolean
+}) {
   return (
     <svg
-      width="80"
-      height="80"
+      width="40"
+      height="40"
       viewBox="0 0 80 80"
       style={{
         overflow: 'visible',
         display: 'block',
-        filter: 'drop-shadow(0 5px 14px rgba(0,0,0,0.3))',
+        filter: 'drop-shadow(0 3px 8px rgba(0,0,0,0.3))',
       }}
     >
-      {/* ── Shadow ── */}
+      {/* Shadow */}
       <ellipse cx="38" cy="80" rx="22" ry="4.5" fill="rgba(0,0,0,0.18)" />
 
-      {/* ── Blue sneakers (drawn behind legs) ── */}
-      {/* left shoe */}
-      <rect x="15" y="76" width="16" height="8" rx="4" fill="#3B82F6" />
-      <line x1="17" y1="80" x2="29" y2="80" stroke="white" strokeWidth="1.4" strokeOpacity="0.55" strokeLinecap="round" />
-      {/* right shoe */}
-      <rect x="40" y="76" width="16" height="8" rx="4" fill="#3B82F6" />
-      <line x1="42" y1="80" x2="54" y2="80" stroke="white" strokeWidth="1.4" strokeOpacity="0.55" strokeLinecap="round" />
+      {/* Orange legs */}
+      <line x1="29" y1="72" x2="24" y2="80" stroke="#E07820" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="43" y1="72" x2="48" y2="80" stroke="#E07820" strokeWidth="3.5" strokeLinecap="round" />
 
-      {/* ── Orange legs ── */}
-      <line x1="29" y1="72" x2="24" y2="78" stroke="#E07820" strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="43" y1="72" x2="48" y2="78" stroke="#E07820" strokeWidth="3.5" strokeLinecap="round" />
-
-      {/* ── Wings – drawn before body so body overlaps inner edge ── */}
+      {/* Wings – drawn before body so body overlaps inner edge */}
       {/* left wing */}
       <g
         className={wingAnim ? 'mascot-wing-anim' : ''}
@@ -127,8 +127,23 @@ function WoodcockSVG({ wingAnim, sleeping }: { wingAnim: boolean; sleeping: bool
         <ellipse cx="64" cy="52" rx="8"  ry="5.5" fill="#8B6428" />
       </g>
 
-      {/* ── Big round chubby body ── */}
+      {/* Bulging bicep muscles (bodybuilder mode only) */}
+      {muscleMode && (
+        <>
+          <circle cx="4"  cy="46" r="14" fill="#7A5420" />
+          <circle cx="3"  cy="44" r="10" fill="#9B7438" />
+          <circle cx="68" cy="46" r="14" fill="#7A5420" />
+          <circle cx="69" cy="44" r="10" fill="#9B7438" />
+        </>
+      )}
+
+      {/* Big round chubby body */}
       <circle cx="36" cy="53" r="24" fill="#8B6535" />
+
+      {/* Hulk green tint overlay (bodybuilder mode) */}
+      {muscleMode && (
+        <circle cx="36" cy="53" r="24" fill="#4ade80" fillOpacity="0.28" />
+      )}
 
       {/* Feather texture lines on body */}
       <path d="M 14 47 Q 36 41 58 47" stroke="#6B4D1A" strokeWidth="1.4" fill="none" strokeLinecap="round" />
@@ -140,10 +155,10 @@ function WoodcockSVG({ wingAnim, sleeping }: { wingAnim: boolean; sleeping: bool
       {/* subtle belly shading at bottom */}
       <ellipse cx="36" cy="68" rx="10" ry="7" fill="#DFC878" />
 
-      {/* ── Neck blending body → head ── */}
+      {/* Neck blending body → head */}
       <ellipse cx="50" cy="38" rx="11" ry="13" fill="#8B6535" />
 
-      {/* ── Small round head ── */}
+      {/* Small round head */}
       <circle cx="52" cy="26" r="14" fill="#9B7540" />
 
       {/* Head top darkening (woodcock's dark crown) */}
@@ -152,41 +167,14 @@ function WoodcockSVG({ wingAnim, sleeping }: { wingAnim: boolean; sleeping: bool
         fill="#6A4818"
       />
 
-      {/* ── Blue sporty headband ── */}
-      <path
-        d="M 39 19 Q 52 10 65 19 L 65 25 Q 52 16 39 25 Z"
-        fill="#3B82F6"
-      />
-      {/* headband white stripe highlight */}
-      <path
-        d="M 40 20 Q 52 12 64 20"
-        stroke="rgba(255,255,255,0.45)"
-        strokeWidth="1.6"
-        fill="none"
-        strokeLinecap="round"
-      />
-      {/* headband lower edge */}
-      <path
-        d="M 39 25 Q 52 18 65 25"
-        stroke="#2563EB"
-        strokeWidth="1"
-        fill="none"
-        strokeLinecap="round"
-      />
-
-      {/* ── Long pointed beak (right side of head, extends outside viewBox) ── */}
-      {/* upper mandible */}
+      {/* Long pointed beak */}
       <path d="M 65 22 L 92 29 L 65 27 Z" fill="#D4A850" />
-      {/* lower mandible */}
       <path d="M 65 28 L 92 29 L 65 33 Z" fill="#B88438" />
-      {/* beak top highlight */}
       <path d="M 65 22 L 92 29" stroke="#E8C068" strokeWidth="0.9" fill="none" />
-      {/* beak groove */}
       <path d="M 65 25 L 88 29" stroke="#A07030" strokeWidth="0.7" fill="none" strokeLinecap="round" />
 
-      {/* ── Eye ── */}
+      {/* Eye */}
       {sleeping ? (
-        /* Closed eye — fill with head color, draw eyelid arc + lashes */
         <g>
           <circle cx="57" cy="23" r="5" fill="#9B7540" />
           <path d="M 52 23 Q 57 17 62 23" stroke="#3D1F06" strokeWidth="2.6" fill="none" strokeLinecap="round" />
@@ -197,9 +185,7 @@ function WoodcockSVG({ wingAnim, sleeping }: { wingAnim: boolean; sleeping: bool
       ) : (
         <g>
           <circle cx="57" cy="23" r="5.5" fill="#1a1a1a" />
-          {/* main white highlight */}
           <circle cx="59.2" cy="21.0" r="2.1" fill="white" />
-          {/* soft secondary highlight */}
           <circle cx="55.2" cy="25.2" r="0.9" fill="rgba(255,255,255,0.4)" />
         </g>
       )}
@@ -213,7 +199,7 @@ const ANIM_DURATION: Partial<Record<MascotState, number>> = {
   happy:         1300,
   excited:       1700,
   celebration:   2500,
-  bodybuilder:   2900,
+  bodybuilder:   3600,
 }
 
 const RANDOM_MESSAGES = [
@@ -230,17 +216,19 @@ const RANDOM_REACTIONS: MascotState[] = ['happy', 'excited', 'celebration', 'bod
 // ── Main mascot component ─────────────────────────────────────────────────
 
 export function Mascot() {
-  const { reaction, trigger, clearReaction } = useMascot()
+  const { reaction, clearReaction } = useMascot()
 
-  const [animState, setAnimState]     = useState<MascotState>('idle')
-  const [message, setMessage]         = useState<string | null>(null)
+  const [animState, setAnimState]       = useState<MascotState>('idle')
+  const [message, setMessage]           = useState<string | null>(null)
   const [bubbleFading, setBubbleFading] = useState(false)
-  const [wingAnim, setWingAnim]       = useState(false)
+  const [wingAnim, setWingAnim]         = useState(false)
+  const [muscleMode, setMuscleMode]     = useState(false)
 
   const animTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const idleTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wingTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const muscleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const animStateRef   = useRef<MascotState>('idle')
   animStateRef.current = animState
 
@@ -274,22 +262,30 @@ export function Mascot() {
     bubbleTimerRef.current = setTimeout(() => {
       setBubbleFading(true)
       bubbleTimerRef.current = setTimeout(() => setMessage(null), 500)
-    }, 2000)
+    }, 2500)
   }, [])
 
   // ── Apply animation ───────────────────────────────────────────────────
 
   const applyAnimation = useCallback((state: MascotState, msg?: string) => {
-    if (animTimerRef.current) clearTimeout(animTimerRef.current)
-    if (wingTimerRef.current) clearTimeout(wingTimerRef.current)
+    if (animTimerRef.current)  clearTimeout(animTimerRef.current)
+    if (wingTimerRef.current)  clearTimeout(wingTimerRef.current)
+    if (muscleTimerRef.current) clearTimeout(muscleTimerRef.current)
 
     setAnimState(state)
 
-    // Wing flap for bouncy/energetic states (not bodybuilder — scale is the star there)
+    // Wing flap for bouncy states
     if (['happy', 'excited', 'celebration'].includes(state)) {
       setWingAnim(false)
       requestAnimationFrame(() => requestAnimationFrame(() => setWingAnim(true)))
       wingTimerRef.current = setTimeout(() => setWingAnim(false), 1100)
+    }
+
+    // Muscles appear after shake phase (0.3s into bodybuilder)
+    if (state === 'bodybuilder') {
+      muscleTimerRef.current = setTimeout(() => setMuscleMode(true), 300)
+    } else {
+      setMuscleMode(false)
     }
 
     if (msg) showBubble(msg)
@@ -298,19 +294,20 @@ export function Mascot() {
     if (dur) {
       animTimerRef.current = setTimeout(() => {
         setAnimState('idle')
+        setMuscleMode(false)
         clearReaction()
       }, dur)
     }
   }, [clearReaction, showBubble])
 
-  // ── Random bodybuilder every 45 s ─────────────────────────────────────
+  // ── Random bodybuilder every 30 s ─────────────────────────────────────
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (animStateRef.current === 'idle') {
         applyAnimation('bodybuilder')
       }
-    }, 45_000)
+    }, 30_000)
     return () => clearInterval(interval)
   }, [applyAnimation])
 
@@ -336,13 +333,11 @@ export function Mascot() {
   return (
     <div
       style={{
-        position: 'fixed',
-        bottom: 90,
-        right: 16,
-        width: 80,
-        height: 80,
-        zIndex: 39,
+        position: 'relative',
+        width: 40,
+        height: 40,
         overflow: 'visible',
+        flexShrink: 0,
       }}
     >
       {message && <SpeechBubble message={message} fading={bubbleFading} />}
@@ -351,10 +346,10 @@ export function Mascot() {
       <div
         className={`mascot-${animState}`}
         onClick={handleClick}
-        style={{ cursor: 'pointer', userSelect: 'none', width: 80, height: 80 }}
+        style={{ cursor: 'pointer', userSelect: 'none', width: 40, height: 40 }}
         title="Cliquez sur moi !"
       >
-        <WoodcockSVG wingAnim={wingAnim} sleeping={isSleeping} />
+        <WoodcockSVG wingAnim={wingAnim} sleeping={isSleeping} muscleMode={muscleMode} />
       </div>
     </div>
   )
