@@ -6,16 +6,9 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Jour } from '@/lib/types'
 import { AddExerciseModal } from './components/AddExerciseModal'
+import { useLang } from './providers/AppProvider'
 
-const DAYS: { jour: Jour; label: string }[] = [
-  { jour: 'lundi',    label: 'Lundi' },
-  { jour: 'mardi',    label: 'Mardi' },
-  { jour: 'mercredi', label: 'Mercredi' },
-  { jour: 'jeudi',    label: 'Jeudi' },
-  { jour: 'vendredi', label: 'Vendredi' },
-  { jour: 'samedi',   label: 'Samedi' },
-  { jour: 'dimanche', label: 'Dimanche' },
-]
+const JOUR_KEYS: Jour[] = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
 function ChevronDownIcon({ open }: { open: boolean }) {
   return (
@@ -23,7 +16,7 @@ function ChevronDownIcon({ open }: { open: boolean }) {
       width="18" height="18" viewBox="0 0 24 24"
       fill="none" stroke="currentColor" strokeWidth={2}
       strokeLinecap="round" strokeLinejoin="round"
-      className={`transition-transform duration-300 text-gray-500 ${open ? 'rotate-180' : ''}`}
+      className={`transition-transform duration-300 text-app-muted ${open ? 'rotate-180' : ''}`}
     >
       <polyline points="6 9 12 15 18 9" />
     </svg>
@@ -32,6 +25,7 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 
 export default function HomePage() {
   const router = useRouter()
+  const { t } = useLang()
   const [expanded, setExpanded] = useState<Jour | null>(null)
   const [joursLogged, setJoursLogged] = useState<Set<string>>(new Set())
   const [joursWithExercises, setJoursWithExercises] = useState<Set<string>>(new Set())
@@ -48,7 +42,6 @@ export default function HomePage() {
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
-    // Which days have been logged today
     supabase
       .from('workout_logs')
       .select('exercise_id, exercises(jour)')
@@ -63,7 +56,6 @@ export default function HomePage() {
         setJoursLogged(done)
       })
 
-    // Which days have at least one exercise configured
     supabase
       .from('exercises')
       .select('jour')
@@ -79,26 +71,27 @@ export default function HomePage() {
 
   return (
     <div className="pb-24">
-      <h1 className="text-2xl font-bold mb-1">Vos séances</h1>
-      <p className="text-gray-500 text-sm mb-6">Choisissez votre entraînement</p>
+      <h1 className="text-2xl font-bold mb-1 text-app-primary">{t('homeTitle')}</h1>
+      <p className="text-app-muted text-sm mb-6">{t('homeSubtitle')}</p>
 
       <div className="flex flex-col gap-3">
-        {DAYS.map((day) => {
-          const isOpen = expanded === day.jour
-          const isDone = joursLogged.has(day.jour)
-          const hasExercises = joursWithExercises.has(day.jour)
+        {JOUR_KEYS.map((jour) => {
+          const label = t(jour)
+          const isOpen = expanded === jour
+          const isDone = joursLogged.has(jour)
+          const hasExercises = joursWithExercises.has(jour)
 
           return (
             <div
-              key={day.jour}
-              className="bg-[#1A1A1A] border border-white/8 rounded-2xl overflow-hidden"
+              key={jour}
+              className="bg-app-card border border-app-subtle rounded-2xl overflow-hidden"
             >
               <button
-                onClick={() => toggle(day.jour)}
+                onClick={() => toggle(jour)}
                 className="w-full flex items-center justify-between px-5 py-4 text-left active:bg-white/5 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-white text-base">{day.label}</span>
+                  <span className="font-semibold text-app-primary text-base">{label}</span>
                   {isDone && (
                     <span className="text-xs font-medium text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-2 py-0.5">
                       ✓
@@ -109,18 +102,18 @@ export default function HomePage() {
               </button>
 
               {isOpen && (
-                <div className="px-5 pb-4 border-t border-white/5 pt-3">
+                <div className="px-5 pb-4 border-t border-app-subtle pt-3">
                   {hasExercises ? (
                     <Link
-                      href={`/seance/${day.jour}`}
+                      href={`/seance/${jour}`}
                       className="flex items-center justify-center w-full py-3 rounded-xl bg-white text-black font-semibold text-sm active:opacity-70 transition-opacity"
                     >
-                      {isDone ? 'Revoir la séance' : 'Commencer'}
+                      {isDone ? t('review') : t('start')}
                     </Link>
                   ) : (
-                    <p className="text-gray-600 text-sm text-center py-2">
-                      Aucun exercice pour ce jour — utilise le{' '}
-                      <span className="text-gray-400 font-medium">+</span> pour en ajouter
+                    <p className="text-app-muted text-sm text-center py-2">
+                      {t('noExercise')}{' '}
+                      <span className="text-app-secondary font-medium">{t('noExerciseAdd')}</span>
                     </p>
                   )}
                 </div>
@@ -132,13 +125,13 @@ export default function HomePage() {
 
       {/* Floating action button */}
       <div className="fixed bottom-[96px] right-4 flex items-center gap-2">
-        <span className="text-xs text-gray-400 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 shadow-lg pointer-events-none">
-          Ajouter un exercice
+        <span className="text-xs text-app-secondary bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 shadow-lg pointer-events-none">
+          {t('addExercise')}
         </span>
         <button
           onClick={() => setShowAddModal(true)}
           className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center text-white text-xl font-light hover:bg-white/20 transition-all active:scale-95"
-          aria-label="Ajouter un exercice"
+          aria-label={t('addExercise')}
         >
           +
         </button>
@@ -148,8 +141,7 @@ export default function HomePage() {
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSaved={() => {
-          showToast('Exercice ajouté !')
-          // Re-fetch which days now have exercises
+          showToast(t('exerciseAdded'))
           supabase
             .from('exercises')
             .select('jour')

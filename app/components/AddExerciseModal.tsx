@@ -158,7 +158,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
 
       {/* Sheet — full-screen on mobile, bottom sheet on larger screens */}
       <div
-        className={`fixed inset-x-0 bottom-0 top-0 z-50 flex flex-col bg-[#0F0F0F] transition-transform duration-300 ease-out sm:top-auto sm:rounded-t-3xl sm:max-h-[92vh] ${
+        className={`fixed inset-x-0 bottom-0 top-0 z-50 flex flex-col bg-app transition-transform duration-300 ease-out sm:top-auto sm:rounded-t-3xl sm:max-h-[92vh] ${
           open ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
@@ -173,7 +173,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
             {step > 1 && (
               <button
                 onClick={handleBack}
-                className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white/8 border border-white/8 text-gray-300 hover:text-white transition-colors"
+                className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-app-elevated border border-app-subtle text-app-secondary hover:text-app-primary transition-colors"
                 aria-label="Retour"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -182,13 +182,13 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
               </button>
             )}
             <div className="min-w-0">
-              <p className="text-xs text-gray-600 font-medium">Étape {step} / 3</p>
-              <h2 className="text-base font-semibold text-white truncate">{stepTitles[step]}</h2>
+              <p className="text-xs text-app-muted font-medium">Étape {step} / 3</p>
+              <h2 className="text-base font-semibold text-app-primary truncate">{stepTitles[step]}</h2>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white/8 border border-white/8 text-gray-400 hover:text-white transition-colors"
+            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-app-elevated border border-app-subtle text-app-muted hover:text-app-primary transition-colors"
             aria-label="Fermer"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -219,9 +219,9 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
                 <button
                   key={day.jour}
                   onClick={() => selectJour(day.jour)}
-                  className="flex items-center justify-between w-full bg-[#1A1A1A] border border-white/8 rounded-2xl px-5 py-4 text-left hover:bg-white/5 active:scale-[0.98] transition-all"
+                  className="flex items-center justify-between w-full bg-app-card border border-app-subtle rounded-2xl px-5 py-4 text-left active:scale-[0.98] transition-all"
                 >
-                  <p className="font-semibold text-white">{day.label}</p>
+                  <p className="font-semibold text-app-primary">{day.label}</p>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
@@ -240,7 +240,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
                 onKeyDown={(e) => e.key === 'Enter' && confirmCustomGroupe()}
                 placeholder="ex: Biceps, Dos, Abdos..."
                 autoFocus
-                className="w-full bg-[#1A1A1A] border border-white/8 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-white/25 transition-colors"
+                className="w-full bg-app-card border border-app-subtle rounded-xl px-4 py-3.5 text-app-primary placeholder-app-muted focus:outline-none focus:border-app-medium transition-colors"
               />
               <button
                 onClick={confirmCustomGroupe}
@@ -276,7 +276,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="ex: Curl haltères"
                   autoFocus
-                  className="w-full bg-[#1A1A1A] border border-white/8 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-white/25 transition-colors"
+                  className="w-full bg-app-card border border-app-subtle rounded-xl px-4 py-3.5 text-app-primary placeholder-app-muted focus:outline-none focus:border-app-medium transition-colors"
                 />
               </div>
 
@@ -292,7 +292,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
                   placeholder="ex: 20"
                   min={0}
                   step={2.5}
-                  className="w-full bg-[#1A1A1A] border border-white/8 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-white/25 transition-colors"
+                  className="w-full bg-app-card border border-app-subtle rounded-xl px-4 py-3.5 text-app-primary placeholder-app-muted focus:outline-none focus:border-app-medium transition-colors"
                 />
               </div>
 
@@ -313,7 +313,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
                         onChange={(e) => set(e.target.value)}
                         min={1}
                         max={50}
-                        className="w-full bg-[#1A1A1A] border border-white/8 rounded-xl px-2 py-3 text-white text-center text-lg font-semibold focus:outline-none focus:border-white/25 transition-colors"
+                        className="w-full bg-app-card border border-app-subtle rounded-xl px-2 py-3 text-app-primary text-center text-lg font-semibold focus:outline-none focus:border-app-medium transition-colors"
                       />
                     </div>
                   ))}
@@ -330,7 +330,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
                   value={repos}
                   onChange={(e) => setRepos(e.target.value)}
                   placeholder="ex: 2min, 1m30"
-                  className="w-full bg-[#1A1A1A] border border-white/8 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-white/25 transition-colors"
+                  className="w-full bg-app-card border border-app-subtle rounded-xl px-4 py-3.5 text-app-primary placeholder-app-muted focus:outline-none focus:border-app-medium transition-colors"
                 />
               </div>
 

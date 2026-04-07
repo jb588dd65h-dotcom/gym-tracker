@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useLang } from '@/app/providers/AppProvider'
 
 function HouseIcon({ size = 22 }: { size?: number }) {
   return (
@@ -19,22 +20,33 @@ function ChartIcon({ size = 22 }: { size?: number }) {
   )
 }
 
-const TABS = [
-  { href: '/', label: 'Séances', icon: HouseIcon, exact: true },
-  { href: '/progression', label: 'Progression', icon: ChartIcon, exact: false },
-]
+function GearIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+    </svg>
+  )
+}
 
 export function NavBar() {
   const pathname = usePathname()
+  const { t } = useLang()
+
+  const TABS = [
+    { href: '/', label: t('navSessions'), icon: HouseIcon, exact: true },
+    { href: '/progression', label: t('navProgression'), icon: ChartIcon, exact: false },
+    { href: '/reglages', label: t('navSettings'), icon: GearIcon, exact: false },
+  ]
 
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50"
       style={{
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        background: 'rgba(255, 255, 255, 0.05)',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        background: 'var(--tab-bg)',
+        borderTop: '1px solid var(--tab-border)',
       }}
     >
       <div className="max-w-2xl mx-auto flex">
@@ -44,20 +56,23 @@ export function NavBar() {
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center justify-center gap-1 py-3 pb-safe"
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 pt-2"
               style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
             >
-              {/* Pill indicator */}
+              {/* Active pill indicator */}
               <div
-                className="w-8 h-1 rounded-full mb-0.5 transition-all duration-300"
+                className="w-8 h-[3px] rounded-full mb-1 transition-all duration-300"
                 style={{ background: isActive ? 'rgba(255,255,255,0.9)' : 'transparent' }}
               />
-              <span style={{ color: isActive ? '#ffffff' : '#6b7280' }} className="transition-colors duration-200">
+              <span
+                className="transition-colors duration-200"
+                style={{ color: isActive ? '#ffffff' : 'var(--text-muted)' }}
+              >
                 <Icon size={22} />
               </span>
               <span
-                className="text-xs font-medium tracking-tight transition-colors duration-200"
-                style={{ color: isActive ? '#ffffff' : '#6b7280' }}
+                className="text-[11px] font-medium tracking-tight transition-colors duration-200"
+                style={{ color: isActive ? '#ffffff' : 'var(--text-muted)' }}
               >
                 {label}
               </span>

@@ -2,18 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Dark theme (default) ── */
 :root {
-  --background: #0F0F0F;
-  --foreground: #ffffff;
+  --bg-app: #0F0F0F;
+  --bg-card: #1A1A1A;
+  --bg-elevated: #242424;
+  --bg-input: rgba(255, 255, 255, 0.05);
+  --text-primary: #FFFFFF;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --tab-bg: rgba(15, 15, 15, 0.7);
+  --tab-border: rgba(255, 255, 255, 0.12);
+  --header-bg: rgba(15, 15, 15, 0.85);
+  --header-border: rgba(255, 255, 255, 0.06);
+  --save-from: #0F0F0F;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] {
+  --bg-app: #F2F2F7;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #E8E8ED;
+  --bg-input: rgba(0, 0, 0, 0.04);
+  --text-primary: #1C1C1E;
+  --text-secondary: #6B6B6B;
+  --text-muted: #9E9E9E;
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-medium: rgba(0, 0, 0, 0.1);
+  --tab-bg: rgba(242, 242, 247, 0.8);
+  --tab-border: rgba(0, 0, 0, 0.1);
+  --header-bg: rgba(242, 242, 247, 0.85);
+  --header-border: rgba(0, 0, 0, 0.06);
+  --save-from: #F2F2F7;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--text-primary);
+  background: var(--bg-app);
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  /* App-level semantic utilities */
+  .bg-app { background: var(--bg-app); }
+  .bg-app-card { background: var(--bg-card); }
+  .bg-app-elevated { background: var(--bg-elevated); }
+  .bg-app-input { background: var(--bg-input); }
+  .text-app-primary { color: var(--text-primary); }
+  .text-app-secondary { color: var(--text-secondary); }
+  .text-app-muted { color: var(--text-muted); }
+  .border-app-subtle { border-color: var(--border-subtle); }
+  .border-app-medium { border-color: var(--border-medium); }
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { AppProvider } from './providers/AppProvider'
+import { Header } from './components/Header'
 import { NavBar } from './components/NavBar'
 import './globals.css'
 
@@ -16,12 +18,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr" className="dark">
-      <body className={`${inter.className} bg-[#0F0F0F] text-white min-h-screen`}>
-        <main className="max-w-2xl mx-auto px-4 py-6">
-          {children}
-        </main>
-        <NavBar />
+    <html lang="fr" suppressHydrationWarning>
+      <body className={inter.className}>
+        <AppProvider>
+          <Header />
+          <main className="max-w-2xl mx-auto px-4 py-6">
+            {children}
+          </main>
+          <NavBar />
+        </AppProvider>
       </body>
     </html>
   )
