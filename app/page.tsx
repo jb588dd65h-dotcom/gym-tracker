@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { Jour } from '@/lib/types'
 import { AddExerciseModal } from './components/AddExerciseModal'
 import { useLang } from './providers/AppProvider'
+import { useMascot } from './providers/MascotProvider'
 
 const JOUR_KEYS: Jour[] = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
@@ -26,6 +27,7 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 export default function HomePage() {
   const router = useRouter()
   const { t } = useLang()
+  const { trigger: mascotTrigger } = useMascot()
   const [expanded, setExpanded] = useState<Jour | null>(null)
   const [joursLogged, setJoursLogged] = useState<Set<string>>(new Set())
   const [joursWithExercises, setJoursWithExercises] = useState<Set<string>>(new Set())
@@ -142,6 +144,7 @@ export default function HomePage() {
         onClose={() => setShowAddModal(false)}
         onSaved={() => {
           showToast(t('exerciseAdded'))
+          mascotTrigger('excited', 'Nouvel exo !')
           supabase
             .from('exercises')
             .select('jour')

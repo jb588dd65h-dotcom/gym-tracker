@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   ComposedChart,
   Line,
@@ -14,6 +14,7 @@ import {
 import { getWorkoutLogsByExercise } from '@/lib/queries'
 import { WorkoutLogWithExercise } from '@/lib/types'
 import { useLang } from '@/app/providers/AppProvider'
+import { useMascot } from '@/app/providers/MascotProvider'
 
 const MUSCLE_GROUPS = ['Épaules', 'Biceps', 'Dos', 'Triceps', 'Pecs', 'Jambes']
 
@@ -188,15 +189,35 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
 
 export default function ProgressionPage() {
   const { t } = useLang()
+  const { trigger: mascotTrigger } = useMascot()
   const [activeTab, setActiveTab] = useState('Épaules')
   const [logsByExercise, setLogsByExercise] = useState<Record<string, WorkoutLogWithExercise[]>>({})
   const [loading, setLoading] = useState(true)
+  const celebratedRef = useRef(false)
 
   useEffect(() => {
+    mascotTrigger('thinking')
     getWorkoutLogsByExercise().then((data) => {
       setLogsByExercise(data)
       setLoading(false)
+
+      // Celebrate once if any exercise has a positive recent trend
+      if (!celebratedRef.current) {
+        const hasImprovement = Object.values(data).some((logs) => {
+          const sorted = [...logs].sort((a, b) => a.session_date.localeCompare(b.session_date))
+          const last = sorted.at(-1)?.poids
+          const prev = sorted.at(-2)?.poids
+          return last != null && prev != null && last > prev
+        })
+        if (hasImprovement) {
+          celebratedRef.current = true
+          mascotTrigger('celebration', 'Tu progresses !')
+        } else {
+          mascotTrigger('idle')
+        }
+      }
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const exercisesByGroup = useMemo(() => {

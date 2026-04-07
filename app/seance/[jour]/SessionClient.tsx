@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { ExerciseWithLog, Jour } from '@/lib/types'
 import { useLang } from '@/app/providers/AppProvider'
+import { useMascot } from '@/app/providers/MascotProvider'
 
 function TrashIcon() {
   return (
@@ -79,6 +80,7 @@ export default function SessionClient({
   today,
 }: SessionClientProps) {
   const { t } = useLang()
+  const { trigger: mascotTrigger } = useMascot()
   const initialState = useCallback((): Record<number, ExerciseState> => {
     const state: Record<number, ExerciseState> = {}
     for (const exercise of exercises) {
@@ -187,6 +189,7 @@ export default function SessionClient({
         setToast({ message: 'Erreur lors de la sauvegarde', type: 'error' })
       } else {
         setToast({ message: `${logsToUpsert.length} exercice(s) enregistré(s) !`, type: 'success' })
+        mascotTrigger('happy', 'Bravo ! 💪')
       }
     } catch {
       setToast({ message: 'Erreur inattendue', type: 'error' })
