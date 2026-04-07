@@ -47,8 +47,8 @@ body {
 /* ── Mascot keyframe animations ── */
 
 @keyframes mascot-breathe {
-  0%, 100% { transform: scale(1) translateY(0); }
-  50%       { transform: scale(1.05) translateY(-3px); }
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.1); }
 }
 
 @keyframes mascot-happy {
@@ -117,7 +117,7 @@ body {
 }
 
 /* Mascot utility classes */
-.mascot-idle        { animation: mascot-breathe     3s   ease-in-out infinite; transform-origin: center bottom; }
+.mascot-idle        { animation: mascot-breathe     2.4s ease-in-out infinite; transform-origin: center center; }
 .mascot-happy       { animation: mascot-happy       1.1s ease-in-out 1;        transform-origin: center bottom; }
 .mascot-excited     { animation: mascot-excited     1.6s ease-in-out 1;        transform-origin: center bottom; }
 .mascot-thinking    { animation: mascot-thinking    1.4s ease-in-out infinite; transform-origin: center bottom; }

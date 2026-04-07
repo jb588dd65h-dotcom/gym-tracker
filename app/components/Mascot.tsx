@@ -3,25 +3,24 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useMascot, MascotState } from '@/app/providers/MascotProvider'
 
-// ── Speech bubble ──────────────────────────────────────────────────────────
+// ── Speech bubble ─────────────────────────────────────────────────────────
 
 function SpeechBubble({ message, fading }: { message: string; fading: boolean }) {
   return (
     <div
       style={{
         position: 'absolute',
-        bottom: 'calc(100% + 10px)',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        bottom: 'calc(100% + 12px)',
+        right: 0,
         whiteSpace: 'nowrap',
-        background: 'rgba(20,20,20,0.92)',
+        background: 'rgba(18,18,18,0.94)',
         color: '#fff',
         fontSize: 13,
         fontWeight: 600,
-        padding: '7px 14px',
-        borderRadius: 20,
-        border: '1px solid rgba(255,255,255,0.12)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+        padding: '8px 15px',
+        borderRadius: 22,
+        border: '1px solid rgba(255,255,255,0.13)',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.45)',
         pointerEvents: 'none',
         animation: fading
           ? 'mascot-bubble-out 0.5s ease-in forwards'
@@ -30,18 +29,17 @@ function SpeechBubble({ message, fading }: { message: string; fading: boolean })
       }}
     >
       {message}
-      {/* little tail */}
+      {/* tail pointing to bird */}
       <div
         style={{
           position: 'absolute',
           bottom: -7,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          right: 22,
           width: 0,
           height: 0,
           borderLeft: '7px solid transparent',
           borderRight: '7px solid transparent',
-          borderTop: '7px solid rgba(20,20,20,0.92)',
+          borderTop: '7px solid rgba(18,18,18,0.94)',
         }}
       />
     </div>
@@ -52,19 +50,12 @@ function SpeechBubble({ message, fading }: { message: string; fading: boolean })
 
 function ZzzBubbles() {
   return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: '60%',
-        left: '70%',
-        pointerEvents: 'none',
-      }}
-    >
-      {[
-        { delay: '0s', size: 11, x: 0, y: 0 },
-        { delay: '0.9s', size: 14, x: 10, y: -8 },
-        { delay: '1.8s', size: 17, x: 5, y: -18 },
-      ].map(({ delay, size, x, y }, i) => (
+    <div style={{ position: 'absolute', bottom: '55%', right: '5%', pointerEvents: 'none' }}>
+      {([
+        { delay: '0s',   size: 11, x: 0,  y: 0   },
+        { delay: '0.9s', size: 14, x: -8, y: -10 },
+        { delay: '1.8s', size: 17, x: -4, y: -22 },
+      ] as const).map(({ delay, size, x, y }, i) => (
         <span
           key={i}
           style={{
@@ -73,9 +64,9 @@ function ZzzBubbles() {
             top: y,
             fontSize: size,
             fontWeight: 700,
-            color: 'rgba(180,200,255,0.85)',
+            color: 'rgba(180,200,255,0.88)',
             animation: `mascot-zzz 2.7s ease-in-out ${delay} infinite`,
-            textShadow: '0 1px 6px rgba(100,120,255,0.4)',
+            textShadow: '0 1px 8px rgba(100,140,255,0.5)',
           }}
         >
           z
@@ -85,119 +76,145 @@ function ZzzBubbles() {
   )
 }
 
-// ── The woodcock SVG ──────────────────────────────────────────────────────
-// Cute cartoon American Woodcock: plump body, very long beak, huge eye,
-// distinctive crown stripes, stubby wings, short orange legs.
+// ── Eye sub-component ─────────────────────────────────────────────────────
 
-function WoodcockSVG({
-  wingAnim,
-  sleeping,
-}: {
-  wingAnim: boolean
-  sleeping: boolean
-}) {
+function Eye({ cx, cy, r = 9.5, sleeping }: { cx: number; cy: number; r?: number; sleeping: boolean }) {
+  if (sleeping) {
+    return (
+      <g>
+        {/* fill with body color so closed eye blends in */}
+        <circle cx={cx} cy={cy} r={r} fill="#8B6914" />
+        {/* eyelid arc */}
+        <path
+          d={`M ${cx - r} ${cy} Q ${cx} ${cy - r * 0.95} ${cx + r} ${cy}`}
+          stroke="#3D1F06"
+          strokeWidth={2.6}
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* lashes */}
+        {[-4, 0, 4].map((dx, i) => (
+          <line
+            key={i}
+            x1={cx + dx} y1={cy - 1}
+            x2={cx + dx + (dx < 0 ? -1.5 : dx > 0 ? 1.5 : 0)} y2={cy - r * 0.7}
+            stroke="#3D1F06"
+            strokeWidth={1.6}
+            strokeLinecap="round"
+          />
+        ))}
+      </g>
+    )
+  }
+  return (
+    <g>
+      {/* white sclera */}
+      <circle cx={cx} cy={cy} r={r} fill="white" />
+      {/* golden ring — gives that warm, polished look */}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#E8B830" strokeWidth={1.6} />
+      {/* pupil */}
+      <circle cx={cx + 0.5} cy={cy + 0.5} r={r * 0.62} fill="#1a1a1a" />
+      {/* main highlight (top-right) */}
+      <circle cx={cx + r * 0.32} cy={cy - r * 0.32} r={r * 0.26} fill="white" />
+      {/* soft secondary highlight (bottom-left) */}
+      <circle cx={cx - r * 0.28} cy={cy + r * 0.3} r={r * 0.13} fill="rgba(255,255,255,0.45)" />
+    </g>
+  )
+}
+
+// ── The redesigned woodcock SVG ────────────────────────────────────────────
+// Duolingo-inspired: big round body, huge expressive eyes, short cute beak,
+// small rounded wings, warm brown/golden palette.
+
+function WoodcockSVG({ wingAnim, sleeping }: { wingAnim: boolean; sleeping: boolean }) {
   return (
     <svg
-      width="80"
-      height="80"
-      viewBox="0 0 80 80"
-      style={{ overflow: 'visible', display: 'block', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.35))' }}
+      width="70"
+      height="70"
+      viewBox="0 0 70 70"
+      style={{
+        overflow: 'visible',
+        display: 'block',
+        filter: 'drop-shadow(0 5px 12px rgba(0,0,0,0.32))',
+      }}
     >
-      {/* Ground shadow */}
-      <ellipse cx="37" cy="79" rx="16" ry="3.5" fill="rgba(0,0,0,0.18)" />
+      {/* ── Ground shadow ── */}
+      <ellipse cx="35" cy="68" rx="21" ry="4" fill="rgba(0,0,0,0.16)" />
 
-      {/* ── Tail feathers ── */}
-      <path d="M14 60 Q7 66 5 75 Q13 65 20 68 Z" fill="#6B4515" />
-      <path d="M13 54 Q6 58 4 67 Q12 60 18 63 Z" fill="#7A5218" />
+      {/* ── Main body (tall rounded oval) ── */}
+      <ellipse cx="35" cy="37" rx="26" ry="31" fill="#8B6914" />
 
-      {/* ── Body ── */}
-      <ellipse cx="35" cy="55" rx="21" ry="17" fill="#9B7230" />
+      {/* ── Belly / chest patch (lighter golden) ── */}
+      <ellipse cx="35" cy="46" rx="17" ry="22" fill="#D4A017" />
 
-      {/* Body feather texture lines */}
-      <path d="M15 50 Q35 44 55 50" stroke="#6B4D18" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-      <path d="M16 56 Q35 50 54 56" stroke="#6B4D18" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-      <path d="M18 62 Q35 57 52 62" stroke="#6B4D18" strokeWidth="1"   fill="none" strokeLinecap="round" />
-
-      {/* ── Left wing (animated) ── */}
+      {/* ── Left wing ── */}
       <g
         className={wingAnim ? 'mascot-wing-anim' : ''}
-        style={{ transformOrigin: '30px 53px' }}
+        style={{ transformOrigin: '17px 46px' }}
       >
-        <ellipse cx="17" cy="54" rx="11" ry="6.5" fill="#7A5218" />
-        <path d="M8 52 Q17 48 26 51" stroke="#5C3D10" strokeWidth="1" fill="none" strokeLinecap="round" />
+        <ellipse cx="8" cy="46" rx="10" ry="7" fill="#7A5210" />
+        {/* wing feather hint */}
+        <path d="M 3 43 Q 8 40 14 43" stroke="#5C3A08" strokeWidth="1" fill="none" strokeLinecap="round" />
       </g>
 
-      {/* ── Right wing (animated, counter-phase) ── */}
+      {/* ── Right wing ── */}
       <g
         className={wingAnim ? 'mascot-wing-anim' : ''}
-        style={{
-          transformOrigin: '42px 56px',
-          animationDirection: wingAnim ? 'reverse' : undefined,
-        }}
+        style={{ transformOrigin: '53px 46px', animationDirection: wingAnim ? 'reverse' : undefined }}
       >
-        <ellipse cx="55" cy="57" rx="8" ry="5.5" fill="#7A5218" />
+        <ellipse cx="62" cy="46" rx="10" ry="7" fill="#7A5210" />
+        <path d="M 56 43 Q 62 40 67 43" stroke="#5C3A08" strokeWidth="1" fill="none" strokeLinecap="round" />
       </g>
 
-      {/* ── Neck blend ── */}
-      <ellipse cx="50" cy="46" rx="9" ry="11" fill="#9B7230" />
+      {/* ── Crown / forehead marking (woodcock stripe) ── */}
+      <path
+        d="M 17 18 Q 35 9 53 18 Q 35 22 17 18 Z"
+        fill="#5C3A08"
+      />
+      {/* buff highlight stripe on crown */}
+      <path
+        d="M 19 18 Q 35 11 51 18"
+        stroke="#E8B830"
+        strokeWidth="1.4"
+        fill="none"
+        strokeLinecap="round"
+      />
 
-      {/* ── Head ── */}
-      <circle cx="51" cy="33" r="15" fill="#9B7230" />
+      {/* ── Eyes ── */}
+      <Eye cx={23} cy={27} r={9.5} sleeping={sleeping} />
+      <Eye cx={47} cy={27} r={9.5} sleeping={sleeping} />
 
-      {/* Crown stripes — woodcock's distinctive buff & dark bands */}
-      <path d="M37 20 Q51 15 65 20" stroke="#4A2D08" strokeWidth="4"   fill="none" strokeLinecap="round" />
-      <path d="M38 26 Q51 21 64 26" stroke="#C8A050" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      <path d="M38 20 Q51 15 65 20" stroke="#C8A050" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      {/* ── Short cute beak (pointing right, almond-shaped) ── */}
+      <path
+        d="M 43 33 Q 56 37 43 42 Q 40 37.5 43 33 Z"
+        fill="#E8891A"
+      />
+      {/* beak dividing line */}
+      <path
+        d="M 43 37.5 Q 52 37 56 37"
+        stroke="#C06810"
+        strokeWidth="0.9"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* beak shine */}
+      <path
+        d="M 44 34.5 Q 50 33 53 36"
+        stroke="rgba(255,210,120,0.6)"
+        strokeWidth="1"
+        fill="none"
+        strokeLinecap="round"
+      />
 
-      {/* ── Eye (very large — woodcock trademark) ── */}
-      <circle cx="56" cy="27" r="8" fill="white" />
-
-      {sleeping ? (
-        /* Closed eye for sleep */
-        <>
-          <ellipse cx="56" cy="27" r="8" fill="#9B7230" />
-          <path d="M48 27 Q56 22 64 27" stroke="#3A2008" strokeWidth="2.8" fill="none" strokeLinecap="round" />
-          {/* little eyelashes */}
-          <line x1="50" y1="27" x2="49" y2="24" stroke="#3A2008" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="56" y1="26" x2="56" y2="22" stroke="#3A2008" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="62" y1="27" x2="63" y2="24" stroke="#3A2008" strokeWidth="1.5" strokeLinecap="round" />
-        </>
-      ) : (
-        /* Open eye */
-        <>
-          <circle cx="57" cy="27" r="5.5" fill="#1A0500" />
-          <circle cx="59"  cy="25"  r="2"   fill="white" />
-          <circle cx="55.5" cy="29.5" r="1" fill="rgba(255,255,255,0.35)" />
-        </>
-      )}
-
-      {/* ── Beak (long! extends outside viewBox — overflow:visible) ── */}
-      <path d="M64 29 L92 38 L90 43 L64 34 Z" fill="#D4A040" />
-      {/* beak top-edge highlight */}
-      <path d="M64 29 L92 38" stroke="#E8B850" strokeWidth="1" fill="none" />
-      {/* beak tip */}
-      <ellipse cx="91" cy="40.5" rx="2.5" ry="2" fill="#A87820" />
-      {/* beak groove line */}
-      <path d="M64 31 L88 39.5" stroke="#B88030" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-
-      {/* ── Legs ── */}
-      <line x1="29" y1="71" x2="26" y2="79" stroke="#D4A040" strokeWidth="2.8" strokeLinecap="round" />
-      <line x1="41" y1="72" x2="44" y2="79" stroke="#D4A040" strokeWidth="2.8" strokeLinecap="round" />
-
-      {/* ── Feet (3 toes each) ── */}
-      {/* left foot */}
-      <line x1="26" y1="79" x2="20" y2="79" stroke="#D4A040" strokeWidth="2" strokeLinecap="round" />
-      <line x1="26" y1="79" x2="24" y2="76" stroke="#D4A040" strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="26" y1="79" x2="28" y2="76" stroke="#D4A040" strokeWidth="1.8" strokeLinecap="round" />
-      {/* right foot */}
-      <line x1="44" y1="79" x2="50" y2="79" stroke="#D4A040" strokeWidth="2" strokeLinecap="round" />
-      <line x1="44" y1="79" x2="42" y2="76" stroke="#D4A040" strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="44" y1="79" x2="46" y2="76" stroke="#D4A040" strokeWidth="1.8" strokeLinecap="round" />
+      {/* ── Small feet (two cute rounded stubs) ── */}
+      <ellipse cx="27" cy="67" rx="7" ry="3.5" fill="#A07010" />
+      <ellipse cx="43" cy="67" rx="7" ry="3.5" fill="#A07010" />
     </svg>
   )
 }
 
-// ── Auto-reset durations (ms) for non-looping animations ─────────────────
+// ── Config ────────────────────────────────────────────────────────────────
+
 const ANIM_DURATION: Partial<Record<MascotState, number>> = {
   happy:       1200,
   excited:     1700,
@@ -205,11 +222,14 @@ const ANIM_DURATION: Partial<Record<MascotState, number>> = {
 }
 
 const RANDOM_MESSAGES = [
-  'Allez, on bosse !',
-  'Tu peux le faire !',
+  'Allez, on bosse ! 🔥',
+  'Tu peux le faire ! 💪',
   'La régularité c\'est la clé !',
-  'Encore un effort !',
+  'Encore un effort ! 🚀',
+  'Pas de douleur, pas de gain !',
+  'Champion du jour, c\'est toi ! 🏆',
 ]
+
 const RANDOM_REACTIONS: MascotState[] = ['happy', 'excited', 'celebration']
 
 // ── Main mascot component ─────────────────────────────────────────────────
@@ -227,11 +247,10 @@ export function Mascot() {
   const idleTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wingTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // ── idle-sleep detection ─────────────────────────────────────────────
+  // ── 30 s idle → sleep ────────────────────────────────────────────────
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
-    // Wake up from sleep on any activity
     setAnimState((prev) => (prev === 'sleep' ? 'idle' : prev))
     idleTimerRef.current = setTimeout(() => {
       setAnimState('sleep')
@@ -249,20 +268,19 @@ export function Mascot() {
     }
   }, [resetIdleTimer])
 
-  // ── helper: show bubble then fade ────────────────────────────────────
+  // ── Speech bubble helper ──────────────────────────────────────────────
 
   const showBubble = useCallback((msg: string) => {
     if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current)
     setBubbleFading(false)
     setMessage(msg)
-    // start fading after 2 s, remove after 2.5 s
     bubbleTimerRef.current = setTimeout(() => {
       setBubbleFading(true)
       bubbleTimerRef.current = setTimeout(() => setMessage(null), 500)
     }, 2000)
   }, [])
 
-  // ── helper: apply an animation state ─────────────────────────────────
+  // ── Apply animation ───────────────────────────────────────────────────
 
   const applyAnimation = useCallback((state: MascotState, msg?: string) => {
     if (animTimerRef.current) clearTimeout(animTimerRef.current)
@@ -270,13 +288,9 @@ export function Mascot() {
 
     setAnimState(state)
 
-    // Wing flap for energetic animations
     if (['happy', 'excited', 'celebration'].includes(state)) {
       setWingAnim(false)
-      // tiny delay so React re-mounts the class
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setWingAnim(true))
-      })
+      requestAnimationFrame(() => requestAnimationFrame(() => setWingAnim(true)))
       wingTimerRef.current = setTimeout(() => setWingAnim(false), 1100)
     }
 
@@ -291,7 +305,7 @@ export function Mascot() {
     }
   }, [clearReaction, showBubble])
 
-  // ── react to context trigger ─────────────────────────────────────────
+  // ── React to context trigger ──────────────────────────────────────────
 
   useEffect(() => {
     if (!reaction) return
@@ -299,10 +313,10 @@ export function Mascot() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reaction?.id])
 
-  // ── click on mascot ──────────────────────────────────────────────────
+  // ── Click handler ─────────────────────────────────────────────────────
 
   function handleClick() {
-    const msg = RANDOM_MESSAGES[Math.floor(Math.random() * RANDOM_MESSAGES.length)]
+    const msg   = RANDOM_MESSAGES[Math.floor(Math.random() * RANDOM_MESSAGES.length)]
     const state = RANDOM_REACTIONS[Math.floor(Math.random() * RANDOM_REACTIONS.length)]
     applyAnimation(state, msg)
     resetIdleTimer()
@@ -314,26 +328,21 @@ export function Mascot() {
     <div
       style={{
         position: 'fixed',
-        bottom: 84,
-        left: 16,
-        width: 80,
-        height: 80,
+        bottom: 90,
+        right: 16,
+        width: 70,
+        height: 70,
         zIndex: 39,
-        // don't clip the beak which extends right
         overflow: 'visible',
       }}
     >
-      {/* Speech bubble */}
       {message && <SpeechBubble message={message} fading={bubbleFading} />}
-
-      {/* Zzz floaties */}
       {isSleeping && <ZzzBubbles />}
 
-      {/* The bird */}
       <div
         className={`mascot-${animState}`}
         onClick={handleClick}
-        style={{ cursor: 'pointer', userSelect: 'none', width: 80, height: 80 }}
+        style={{ cursor: 'pointer', userSelect: 'none', width: 70, height: 70 }}
         title="Cliquez sur moi !"
       >
         <WoodcockSVG wingAnim={wingAnim} sleeping={isSleeping} />
