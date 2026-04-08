@@ -42,10 +42,22 @@ export default async function SeancePage({
     .eq('jour', jour)
     .order('ordre')
 
-  if (exercisesError || !exercises) {
+  console.log(`[SeancePage] jour=${jour} exercises=${exercises?.length ?? 'null'} error=${exercisesError?.message ?? 'none'} code=${exercisesError?.code ?? '-'}`)
+
+  if (exercisesError) {
+    console.error('[SeancePage] Supabase error fetching exercises:', exercisesError)
     return (
-      <div className="text-red-400 p-4">
-        Erreur lors du chargement des exercices.
+      <div className="bg-red-950/40 border border-red-500/30 rounded-xl p-5 m-4">
+        <p className="text-red-400 font-semibold mb-1">Erreur lors du chargement des exercices</p>
+        <p className="text-red-400/70 text-sm font-mono">{exercisesError.message} ({exercisesError.code})</p>
+      </div>
+    )
+  }
+
+  if (!exercises) {
+    return (
+      <div className="text-app-muted p-4 text-sm">
+        Impossible de charger les exercices. Vérifiez votre connexion.
       </div>
     )
   }
