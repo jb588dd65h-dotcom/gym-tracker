@@ -89,8 +89,8 @@ function WoodcockSVG({
 }) {
   return (
     <svg
-      width="40"
-      height="40"
+      width="60"
+      height="60"
       viewBox="0 0 80 80"
       style={{
         overflow: 'visible',
@@ -105,45 +105,32 @@ function WoodcockSVG({
       <line x1="29" y1="72" x2="24" y2="80" stroke="#E07820" strokeWidth="3.5" strokeLinecap="round" />
       <line x1="43" y1="72" x2="48" y2="80" stroke="#E07820" strokeWidth="3.5" strokeLinecap="round" />
 
-      {/* Wings – drawn before body so body overlaps inner edge */}
-      {/* left wing */}
-      <g
-        className={wingAnim ? 'mascot-wing-anim' : ''}
-        style={{ transformOrigin: '26px 52px' }}
-      >
-        <ellipse cx="14" cy="52" rx="13" ry="9" fill="#7A5420" />
-        <ellipse cx="13" cy="51" rx="9"  ry="6" fill="#8B6428" />
-        <path d="M 4 49 Q 13 44 23 49" stroke="#5A3C10" strokeWidth="1" fill="none" strokeLinecap="round" />
+      {/* Wings – fade out during bodybuilder mode */}
+      <g style={{ opacity: muscleMode ? 0 : 1, transition: 'opacity 0.4s ease-in-out' }}>
+        {/* left wing */}
+        <g
+          className={wingAnim ? 'mascot-wing-anim' : ''}
+          style={{ transformOrigin: '26px 52px' }}
+        >
+          <ellipse cx="14" cy="52" rx="13" ry="9" fill="#7A5420" />
+          <ellipse cx="13" cy="51" rx="9"  ry="6" fill="#8B6428" />
+          <path d="M 4 49 Q 13 44 23 49" stroke="#5A3C10" strokeWidth="1" fill="none" strokeLinecap="round" />
+        </g>
+        {/* right wing */}
+        <g
+          className={wingAnim ? 'mascot-wing-anim' : ''}
+          style={{
+            transformOrigin: '52px 53px',
+            animationDirection: wingAnim ? 'reverse' : 'normal',
+          }}
+        >
+          <ellipse cx="63" cy="53" rx="11" ry="8" fill="#7A5420" />
+          <ellipse cx="64" cy="52" rx="8"  ry="5.5" fill="#8B6428" />
+        </g>
       </g>
-      {/* right wing */}
-      <g
-        className={wingAnim ? 'mascot-wing-anim' : ''}
-        style={{
-          transformOrigin: '52px 53px',
-          animationDirection: wingAnim ? 'reverse' : 'normal',
-        }}
-      >
-        <ellipse cx="63" cy="53" rx="11" ry="8" fill="#7A5420" />
-        <ellipse cx="64" cy="52" rx="8"  ry="5.5" fill="#8B6428" />
-      </g>
-
-      {/* Bulging bicep muscles (bodybuilder mode only) */}
-      {muscleMode && (
-        <>
-          <circle cx="4"  cy="46" r="14" fill="#7A5420" />
-          <circle cx="3"  cy="44" r="10" fill="#9B7438" />
-          <circle cx="68" cy="46" r="14" fill="#7A5420" />
-          <circle cx="69" cy="44" r="10" fill="#9B7438" />
-        </>
-      )}
 
       {/* Big round chubby body */}
       <circle cx="36" cy="53" r="24" fill="#8B6535" />
-
-      {/* Hulk green tint overlay (bodybuilder mode) */}
-      {muscleMode && (
-        <circle cx="36" cy="53" r="24" fill="#4ade80" fillOpacity="0.28" />
-      )}
 
       {/* Feather texture lines on body */}
       <path d="M 14 47 Q 36 41 58 47" stroke="#6B4D1A" strokeWidth="1.4" fill="none" strokeLinecap="round" />
@@ -154,6 +141,64 @@ function WoodcockSVG({
       <ellipse cx="36" cy="58" rx="14" ry="16" fill="#EDD898" />
       {/* subtle belly shading at bottom */}
       <ellipse cx="36" cy="68" rx="10" ry="7" fill="#DFC878" />
+
+      {/* MUSCULAR ARMS – appear during bodybuilder mode, arms behind head/neck */}
+      {muscleMode && (
+        <>
+          {/* Phase 1: Front Double Biceps (0–1.7s after arms appear) */}
+          <g style={{ animation: 'arm-biceps-pose 1.7s ease-in-out 0s both' }}>
+            {/* Left arm: shoulder→elbow→fist straight up */}
+            <line x1="13" y1="52" x2="2"  y2="44" stroke="#D4A574" strokeWidth="12" strokeLinecap="round"/>
+            <line x1="2"  y1="44" x2="2"  y2="27" stroke="#D4A574" strokeWidth="10" strokeLinecap="round"/>
+            {/* Left bicep bulge */}
+            <ellipse cx="5"  cy="46" rx="9" ry="12" fill="#D4A574"/>
+            <ellipse cx="4"  cy="44" rx="6" ry="8"  fill="#E8C09A"/>
+            {/* Left fist */}
+            <circle cx="2"  cy="24" r="7" fill="#D4A574"/>
+            <circle cx="3"  cy="23" r="3" fill="#E8C09A"/>
+            {/* Right arm: shoulder→elbow→fist straight up */}
+            <line x1="59" y1="52" x2="72" y2="44" stroke="#D4A574" strokeWidth="12" strokeLinecap="round"/>
+            <line x1="72" y1="44" x2="72" y2="27" stroke="#D4A574" strokeWidth="10" strokeLinecap="round"/>
+            {/* Right bicep bulge */}
+            <ellipse cx="68" cy="46" rx="9" ry="12" fill="#D4A574"/>
+            <ellipse cx="69" cy="44" rx="6" ry="8"  fill="#E8C09A"/>
+            {/* Right fist */}
+            <circle cx="72" cy="24" r="7" fill="#D4A574"/>
+            <circle cx="73" cy="23" r="3" fill="#E8C09A"/>
+          </g>
+
+          {/* Phase 2: Side Chest (delay 1.5s, duration 0.9s) */}
+          <g style={{ animation: 'arm-sidechest-pose 0.9s ease-in-out 1.5s both' }}>
+            {/* Left arm extended forward (downward angle) */}
+            <line x1="13" y1="54" x2="28" y2="53" stroke="#D4A574" strokeWidth="11" strokeLinecap="round"/>
+            <line x1="28" y1="53" x2="28" y2="68" stroke="#D4A574" strokeWidth="9"  strokeLinecap="round"/>
+            <circle cx="28" cy="70" r="6" fill="#D4A574"/>
+            {/* Right arm curled, big bicep profile */}
+            <line x1="59" y1="52" x2="72" y2="46" stroke="#D4A574" strokeWidth="12" strokeLinecap="round"/>
+            <line x1="72" y1="46" x2="72" y2="30" stroke="#D4A574" strokeWidth="10" strokeLinecap="round"/>
+            <ellipse cx="68" cy="47" rx="10" ry="13" fill="#D4A574"/>
+            <ellipse cx="67" cy="45" rx="7"  ry="9"  fill="#E8C09A"/>
+            <circle cx="72" cy="27" r="7" fill="#D4A574"/>
+            <circle cx="73" cy="26" r="3" fill="#E8C09A"/>
+          </g>
+
+          {/* Phase 3: Most Muscular – crab crunch (delay 2.3s, duration 1.0s) */}
+          <g style={{ animation: 'arm-mostmuscular-pose 1.0s ease-in-out 2.3s both' }}>
+            {/* Left arm crunching out and down */}
+            <line x1="13" y1="52" x2="-1" y2="50" stroke="#D4A574" strokeWidth="13" strokeLinecap="round"/>
+            <line x1="-1" y1="50" x2="4"  y2="67" stroke="#D4A574" strokeWidth="11" strokeLinecap="round"/>
+            <ellipse cx="4"  cy="52" rx="9" ry="12" fill="#D4A574"/>
+            <ellipse cx="3"  cy="50" rx="6" ry="8"  fill="#E8C09A"/>
+            <circle cx="4"  cy="69" r="7" fill="#D4A574"/>
+            {/* Right arm crunching out and down */}
+            <line x1="59" y1="52" x2="73" y2="50" stroke="#D4A574" strokeWidth="13" strokeLinecap="round"/>
+            <line x1="73" y1="50" x2="68" y2="67" stroke="#D4A574" strokeWidth="11" strokeLinecap="round"/>
+            <ellipse cx="69" cy="52" rx="9" ry="12" fill="#D4A574"/>
+            <ellipse cx="70" cy="50" rx="6" ry="8"  fill="#E8C09A"/>
+            <circle cx="68" cy="69" r="7" fill="#D4A574"/>
+          </g>
+        </>
+      )}
 
       {/* Neck blending body → head */}
       <ellipse cx="50" cy="38" rx="11" ry="13" fill="#8B6535" />
@@ -334,8 +379,8 @@ export function Mascot() {
     <div
       style={{
         position: 'relative',
-        width: 40,
-        height: 40,
+        width: 60,
+        height: 60,
         overflow: 'visible',
         flexShrink: 0,
       }}
@@ -346,7 +391,7 @@ export function Mascot() {
       <div
         className={`mascot-${animState}`}
         onClick={handleClick}
-        style={{ cursor: 'pointer', userSelect: 'none', width: 40, height: 40 }}
+        style={{ cursor: 'pointer', userSelect: 'none', width: 60, height: 60 }}
         title="Cliquez sur moi !"
       >
         <WoodcockSVG wingAnim={wingAnim} sleeping={isSleeping} muscleMode={muscleMode} />
