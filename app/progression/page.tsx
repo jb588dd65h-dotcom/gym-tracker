@@ -11,12 +11,10 @@ import {
   ReferenceArea,
   ResponsiveContainer,
 } from 'recharts'
-import { getWorkoutLogsByExercise } from '@/lib/queries'
+import { getWorkoutLogsByExercise, getMuscleGroups } from '@/lib/queries'
 import { WorkoutLogWithExercise } from '@/lib/types'
 import { useLang } from '@/app/providers/AppProvider'
 import { useMascot } from '@/app/providers/MascotProvider'
-
-const MUSCLE_GROUPS = ['Épaules', 'Biceps', 'Dos', 'Triceps', 'Pecs', 'Jambes']
 
 type TimeFilter = '1M' | '3M' | 'Tout'
 
@@ -107,12 +105,6 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
         </div>
       </div>
 
-      {/* DEBUG: remove once data is verified */}
-      <p className="text-xs text-app-muted mb-2">
-        {logs.length} log(s) total · {new Set(logs.map((l) => l.session_date)).size} date(s) distincte(s)
-        {timeFilter !== 'Tout' && ` · ${filteredLogs.length} dans la période`}
-      </p>
-
       {tooFewData ? (
         <p className="text-app-muted text-sm py-4 text-center">
           {t('notEnoughData')}
@@ -190,21 +182,24 @@ function ExerciseCard({ exerciseName, logs }: ExerciseCardProps) {
 export default function ProgressionPage() {
   const { t } = useLang()
   const { trigger: mascotTrigger } = useMascot()
-  const [activeTab, setActiveTab] = useState('Épaules')
+  const [muscleGroups, setMuscleGroups] = useState<string[]>([])
+  const [activeTab, setActiveTab] = useState<string>('')
   const [logsByExercise, setLogsByExercise] = useState<Record<string, WorkoutLogWithExercise[]>>({})
   const [loading, setLoading] = useState(true)
   const celebratedRef = useRef(false)
 
   useEffect(() => {
     mascotTrigger('thinking')
-    getWorkoutLogsByExercise().then((data) => {
-      setLogsByExercise(data)
+    Promise.all([getMuscleGroups(), getWorkoutLogsByExercise()]).then(([groups, logs]) => {
+      setMuscleGroups(groups)
+      setActiveTab((prev) => (groups.includes(prev) ? prev : groups[0] ?? ''))
+      setLogsByExercise(logs)
       setLoading(false)
 
       // Celebrate once if any exercise has a positive recent trend
       if (!celebratedRef.current) {
-        const hasImprovement = Object.values(data).some((logs) => {
-          const sorted = [...logs].sort((a, b) => a.session_date.localeCompare(b.session_date))
+        const hasImprovement = Object.values(logs).some((logList) => {
+          const sorted = [...logList].sort((a, b) => a.session_date.localeCompare(b.session_date))
           const last = sorted.at(-1)?.poids
           const prev = sorted.at(-2)?.poids
           return last != null && prev != null && last > prev
@@ -222,16 +217,16 @@ export default function ProgressionPage() {
 
   const exercisesByGroup = useMemo(() => {
     const grouped: Record<string, { name: string; logs: WorkoutLogWithExercise[] }[]> = {}
-    for (const groupe of MUSCLE_GROUPS) grouped[groupe] = []
+    for (const groupe of muscleGroups) grouped[groupe] = []
 
     for (const [name, logs] of Object.entries(logsByExercise)) {
       const groupe = logs[0]?.exercises?.groupe_musculaire
-      if (groupe && grouped[groupe]) {
+      if (groupe && grouped[groupe] !== undefined) {
         grouped[groupe].push({ name, logs })
       }
     }
     return grouped
-  }, [logsByExercise])
+  }, [logsByExercise, muscleGroups])
 
   const activeExercises = exercisesByGroup[activeTab] ?? []
 
@@ -241,7 +236,7 @@ export default function ProgressionPage() {
       <p className="text-app-muted text-sm mb-5">{t('progressionSubtitle')}</p>
 
       <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
-        {MUSCLE_GROUPS.map((groupe) => (
+        {muscleGroups.map((groupe) => (
           <button
             key={groupe}
             onClick={() => setActiveTab(groupe)}
