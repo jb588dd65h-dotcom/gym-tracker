@@ -55,6 +55,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
 
+  // Redirect once the auth context confirms the user is logged in
   useEffect(() => {
     if (!loading && user) {
       router.replace('/')
@@ -73,7 +74,7 @@ export default function LoginPage() {
         setSubmitting(false)
         return
       }
-      router.replace('/')
+      // Redirect is driven by the useEffect above reacting to user being set
     } else {
       const { error, needsConfirmation } = await signUp(email, password)
       if (error) {
@@ -87,7 +88,7 @@ export default function LoginPage() {
         setSubmitting(false)
         return
       }
-      router.replace('/')
+      // Auto sign-in after signup (no confirmation required) — useEffect redirects
     }
 
     setSubmitting(false)
@@ -177,11 +178,19 @@ export default function LoginPage() {
           disabled={submitting || !email || !password}
           className="w-full mt-5 py-3.5 rounded-2xl bg-white text-black font-bold text-sm disabled:opacity-30 transition-all active:scale-[0.98]"
         >
-          {submitting
-            ? '...'
-            : mode === 'signin'
-            ? 'Se connecter'
-            : 'Créer mon compte'}
+          {submitting ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Connexion...
+            </span>
+          ) : mode === 'signin' ? (
+            'Se connecter'
+          ) : (
+            'Créer mon compte'
+          )}
         </button>
       </div>
     </div>
