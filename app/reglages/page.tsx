@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
 import { useTheme, useLang } from '@/app/providers/AppProvider'
-import type { User } from '@supabase/supabase-js'
 
 // ── Reusable section card ──────────────────────────────────────────────────
 
@@ -43,108 +44,40 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   )
 }
 
-// ── Auth form ──────────────────────────────────────────────────────────────
+// ── Confirmation modal ─────────────────────────────────────────────────────
 
-function AuthForm({ onSuccess }: { onSuccess: (user: User) => void }) {
-  const { t } = useLang()
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
-
-  async function handleSubmit() {
-    setError(null)
-    setInfo(null)
-    setLoading(true)
-    if (mode === 'signin') {
-      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password })
-      if (err) { setError(t('loginError')); setLoading(false); return }
-      if (data.user) onSuccess(data.user)
-    } else {
-      const { error: err } = await supabase.auth.signUp({ email, password })
-      if (err) { setError(err.message); setLoading(false); return }
-      setInfo(t('signupSuccess'))
-      setMode('signin')
-    }
-    setLoading(false)
-  }
-
-  const inputClass = 'w-full bg-app-input border border-app-subtle rounded-xl px-4 py-3 text-app-primary placeholder-app-muted focus:outline-none focus:border-app-medium transition-colors text-sm'
-
-  return (
-    <div className="p-4 flex flex-col gap-3">
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder={t('email')}
-        className={inputClass}
-        autoComplete="email"
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder={t('password')}
-        className={inputClass}
-        autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-        onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-      />
-      {error && <p className="text-red-400 text-xs">{error}</p>}
-      {info && <p className="text-green-400 text-xs">{info}</p>}
-      <div className="flex gap-2 pt-1">
-        <button
-          onClick={() => { setMode('signin'); setError(null) }}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            mode === 'signin' ? 'bg-white text-black' : 'bg-app-elevated text-app-secondary'
-          }`}
-        >
-          {t('signIn')}
-        </button>
-        <button
-          onClick={() => { setMode('signup'); setError(null) }}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            mode === 'signup' ? 'bg-white text-black' : 'bg-app-elevated text-app-secondary'
-          }`}
-        >
-          {t('createAccount')}
-        </button>
-      </div>
-      <button
-        onClick={handleSubmit}
-        disabled={loading || !email || !password}
-        className="w-full py-3 rounded-xl bg-white text-black font-semibold text-sm disabled:opacity-40 transition-opacity active:scale-[0.98]"
-      >
-        {loading ? '...' : mode === 'signin' ? t('signIn') : t('createAccount')}
-      </button>
-    </div>
-  )
+interface ConfirmModalProps {
+  title: string
+  message: string
+  confirmLabel: string
+  onCancel: () => void
+  onConfirm: () => void
+  danger?: boolean
 }
 
-// ── Delete confirmation modal ──────────────────────────────────────────────
-
-function DeleteModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
-  const { t } = useLang()
+function ConfirmModal({ title, message, confirmLabel, onCancel, onConfirm, danger }: ConfirmModalProps) {
   return (
     <>
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" onClick={onCancel} />
       <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-app-card border border-app-subtle rounded-2xl p-6 shadow-2xl max-w-sm mx-auto">
-        <h3 className="text-app-primary font-semibold text-base mb-2">{t('deleteConfirmTitle')}</h3>
-        <p className="text-app-secondary text-sm mb-6">{t('deleteConfirmMsg')}</p>
+        <h3 className="text-app-primary font-semibold text-base mb-2">{title}</h3>
+        <p className="text-app-secondary text-sm mb-6">{message}</p>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
             className="flex-1 py-2.5 rounded-xl bg-app-elevated border border-app-subtle text-app-secondary text-sm font-medium"
           >
-            {t('cancel')}
+            Annuler
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-2.5 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium"
+            className={`flex-1 py-2.5 rounded-xl text-sm font-medium border ${
+              danger
+                ? 'bg-red-500/20 border-red-500/30 text-red-400'
+                : 'bg-white/10 border-white/20 text-white'
+            }`}
           >
-            {t('confirm')}
+            {confirmLabel}
           </button>
         </div>
       </div>
@@ -154,32 +87,42 @@ function DeleteModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm:
 
 // ── Main settings page ─────────────────────────────────────────────────────
 
+type Modal = 'deleteData' | 'deleteAccount' | null
+
 export default function ReglagesPage() {
+  const router = useRouter()
   const { theme, setTheme } = useTheme()
   const { lang, setLang, t } = useLang()
-  const [user, setUser] = useState<User | null>(null)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [deleteMsg, setDeleteMsg] = useState<string | null>(null)
+  const { user, signOut } = useAuth()
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user ?? null)
-    })
-  }, [])
+  const [modal, setModal] = useState<Modal>(null)
+  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
+
+  function showFeedback(msg: string, ok = true) {
+    setFeedback({ msg, ok })
+    setTimeout(() => setFeedback(null), 3000)
+  }
 
   async function handleSignOut() {
-    await supabase.auth.signOut()
-    setUser(null)
+    await signOut()
+    router.push('/login')
   }
 
   async function handleDeleteData() {
-    setShowDeleteModal(false)
-    const { error: logsErr } = await supabase.from('workout_logs').delete().neq('id', 0)
-    const { error: exErr } = await supabase.from('exercises').delete().neq('id', 0)
-    if (!logsErr && !exErr) {
-      setDeleteMsg(t('deleteSuccess'))
-      setTimeout(() => setDeleteMsg(null), 3000)
-    }
+    setModal(null)
+    await supabase.from('workout_logs').delete().neq('id', 0)
+    await supabase.from('exercises').delete().neq('id', 0)
+    showFeedback(t('deleteSuccess'))
+  }
+
+  async function handleDeleteAccount() {
+    setModal(null)
+    // Delete all user data (RLS ensures only current user's rows are removed)
+    await supabase.from('workout_logs').delete().neq('id', 0)
+    await supabase.from('exercises').delete().neq('id', 0)
+    // Delete the auth account via DB function
+    await supabase.rpc('delete_user')
+    router.push('/login')
   }
 
   return (
@@ -207,7 +150,15 @@ export default function ReglagesPage() {
             </Row>
           </>
         ) : (
-          <AuthForm onSuccess={setUser} />
+          <Row>
+            <span className="text-sm text-app-muted">Non connecté</span>
+            <button
+              onClick={() => router.push('/login')}
+              className="px-4 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-semibold"
+            >
+              Se connecter
+            </button>
+          </Row>
         )}
       </Section>
 
@@ -251,22 +202,54 @@ export default function ReglagesPage() {
         <Row>
           <span className="text-sm font-medium text-red-400">{t('deleteData')}</span>
           <button
-            onClick={() => setShowDeleteModal(true)}
+            onClick={() => setModal('deleteData')}
             className="px-3 py-1.5 rounded-xl bg-red-500/15 border border-red-500/25 text-red-400 text-xs font-semibold"
+          >
+            ✕
+          </button>
+        </Row>
+        <Row>
+          <span className="text-sm font-medium text-red-500">Supprimer mon compte</span>
+          <button
+            onClick={() => setModal('deleteAccount')}
+            className="px-3 py-1.5 rounded-xl bg-red-600/15 border border-red-600/25 text-red-500 text-xs font-semibold"
           >
             ✕
           </button>
         </Row>
       </Section>
 
-      {deleteMsg && (
-        <div className="fixed bottom-[96px] left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-green-500 text-white text-sm font-semibold shadow-xl whitespace-nowrap">
-          ✓ {deleteMsg}
+      {/* Feedback toast */}
+      {feedback && (
+        <div className={`fixed bottom-[96px] left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl text-white text-sm font-semibold shadow-xl whitespace-nowrap ${
+          feedback.ok ? 'bg-green-500' : 'bg-red-500'
+        }`}>
+          {feedback.ok ? '✓' : '✕'} {feedback.msg}
         </div>
       )}
 
-      {showDeleteModal && (
-        <DeleteModal onCancel={() => setShowDeleteModal(false)} onConfirm={handleDeleteData} />
+      {/* Delete data modal */}
+      {modal === 'deleteData' && (
+        <ConfirmModal
+          title={t('deleteConfirmTitle')}
+          message={t('deleteConfirmMsg')}
+          confirmLabel={t('confirm')}
+          onCancel={() => setModal(null)}
+          onConfirm={handleDeleteData}
+          danger
+        />
+      )}
+
+      {/* Delete account modal */}
+      {modal === 'deleteAccount' && (
+        <ConfirmModal
+          title="Supprimer mon compte"
+          message="Toutes vos données seront supprimées et votre compte sera définitivement fermé. Cette action est irréversible."
+          confirmLabel="Supprimer le compte"
+          onCancel={() => setModal(null)}
+          onConfirm={handleDeleteAccount}
+          danger
+        />
       )}
     </div>
   )

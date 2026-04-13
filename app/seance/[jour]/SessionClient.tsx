@@ -146,6 +146,7 @@ export default function SessionClient({
       const now = new Date()
       const saveDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
+      const { data: { user } } = await supabase.auth.getUser()
       const logsToUpsert = []
 
       for (const exercise of exercises) {
@@ -165,6 +166,7 @@ export default function SessionClient({
           serie2_reps: s2,
           serie3_reps: s3,
           note: null,
+          user_id: user?.id,
         })
       }
 

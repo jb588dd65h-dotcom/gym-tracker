@@ -66,6 +66,7 @@ export const TRANSLATIONS = {
     signupSuccess: 'Compte créé ! Vérifiez votre email.',
     deleteSuccess: 'Données supprimées.',
     connectedAs: 'Connecté en tant que',
+    deleteAccount: 'Supprimer mon compte',
   },
   en: {
     // Nav
@@ -132,6 +133,7 @@ export const TRANSLATIONS = {
     signupSuccess: 'Account created! Check your email.',
     deleteSuccess: 'Data deleted.',
     connectedAs: 'Signed in as',
+    deleteAccount: 'Delete my account',
   },
 } as const
 

@@ -104,6 +104,8 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
 
     const maxOrdre = (ordreData?.[0]?.ordre as number | undefined) ?? 0
 
+    const { data: { user } } = await supabase.auth.getUser()
+
     const payload = {
       jour: jour!,
       groupe_musculaire: finalGroupe,
@@ -114,6 +116,7 @@ export function AddExerciseModal({ open, onClose, onSaved }: Props) {
       serie3_reps_cible: parseInt(s3) || 10,
       repos: repos.trim() || null,
       ordre: maxOrdre + 1,
+      user_id: user?.id,
     }
 
     console.log('[AddExercise] inserting:', payload)

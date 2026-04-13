@@ -1,70 +1,55 @@
+// ── Seed script (development / template reference only) ───────────────────
+//
+// This script requires a SUPABASE_SERVICE_ROLE_KEY in .env.local to bypass RLS,
+// since the new per-user policies block unauthenticated inserts.
+//
+// In production, new users receive the template exercises automatically when they
+// sign up (see lib/auth-context.tsx → copyTemplateIfNew).
+//
+// To use: add SUPABASE_SERVICE_ROLE_KEY to .env.local, then run:
+//   npm run db:seed
+
 import { config } from 'dotenv'
 config({ path: '.env.local' })
 import { createClient } from '@supabase/supabase-js'
+import { TEMPLATE_EXERCISES } from './template-exercises'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local')
+if (!supabaseUrl) {
+  console.error('Missing NEXT_PUBLIC_SUPABASE_URL in .env.local')
   process.exit(1)
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+if (!serviceRoleKey) {
+  console.error(
+    'Missing SUPABASE_SERVICE_ROLE_KEY in .env.local\n' +
+    'The seed script requires the service role key to bypass RLS.\n' +
+    'New users get template exercises automatically via the sign-up flow.'
+  )
+  process.exit(1)
+}
 
-const exercises = [
-  // MONDAY - Épaules
-  { jour: 'lundi', groupe_musculaire: 'Épaules', exercice: 'Deltoid press', poids_initial: 50, serie1_reps_cible: 13, serie2_reps_cible: 12, serie3_reps_cible: 10, repos: null, ordre: 1 },
-  { jour: 'lundi', groupe_musculaire: 'Épaules', exercice: 'Élévation frontale', poids_initial: 30, serie1_reps_cible: 12, serie2_reps_cible: 11, serie3_reps_cible: 9, repos: null, ordre: 2 },
-  { jour: 'lundi', groupe_musculaire: 'Épaules', exercice: 'Lateral deltoids', poids_initial: 45, serie1_reps_cible: 11, serie2_reps_cible: 10, serie3_reps_cible: 10, repos: null, ordre: 3 },
-  { jour: 'lundi', groupe_musculaire: 'Épaules', exercice: 'Reverse pec fly', poids_initial: 40, serie1_reps_cible: 12, serie2_reps_cible: 11, serie3_reps_cible: 9, repos: null, ordre: 4 },
-  { jour: 'lundi', groupe_musculaire: 'Épaules', exercice: 'Standing multi flight', poids_initial: 45, serie1_reps_cible: 11, serie2_reps_cible: 10, serie3_reps_cible: 9, repos: null, ordre: 5 },
-
-  // TUESDAY - Biceps
-  { jour: 'mardi', groupe_musculaire: 'Biceps', exercice: 'Curls poulies (panata)', poids_initial: 30, serie1_reps_cible: 13, serie2_reps_cible: 12, serie3_reps_cible: 10, repos: '1m45', ordre: 1 },
-  { jour: 'mardi', groupe_musculaire: 'Biceps', exercice: 'Curls barre poulie (panata)', poids_initial: 60, serie1_reps_cible: 12, serie2_reps_cible: 11, serie3_reps_cible: 10, repos: '1m45', ordre: 2 },
-  { jour: 'mardi', groupe_musculaire: 'Biceps', exercice: 'Curls haltères incliné sur banc', poids_initial: 15, serie1_reps_cible: 11, serie2_reps_cible: 10, serie3_reps_cible: 9, repos: '1m45', ordre: 3 },
-  { jour: 'mardi', groupe_musculaire: 'Biceps', exercice: 'Curls marteau haltères', poids_initial: 15, serie1_reps_cible: 12, serie2_reps_cible: 11, serie3_reps_cible: 10, repos: '1m45', ordre: 4 },
-
-  // TUESDAY - Dos
-  { jour: 'mardi', groupe_musculaire: 'Dos', exercice: 'Lat pulldown', poids_initial: 100, serie1_reps_cible: 9, serie2_reps_cible: 8, serie3_reps_cible: 7, repos: '3min', ordre: 5 },
-  { jour: 'mardi', groupe_musculaire: 'Dos', exercice: 'Pulley row', poids_initial: 80, serie1_reps_cible: 11, serie2_reps_cible: 10, serie3_reps_cible: 9, repos: '2m45', ordre: 6 },
-  { jour: 'mardi', groupe_musculaire: 'Dos', exercice: 'Tirage unilatérale', poids_initial: 60, serie1_reps_cible: 9, serie2_reps_cible: 8, serie3_reps_cible: 6, repos: '2min', ordre: 7 },
-  { jour: 'mardi', groupe_musculaire: 'Dos', exercice: 'Pull over', poids_initial: 60, serie1_reps_cible: 13, serie2_reps_cible: 12, serie3_reps_cible: 11, repos: '2min', ordre: 8 },
-
-  // FRIDAY - Triceps
-  { jour: 'vendredi', groupe_musculaire: 'Triceps', exercice: 'Tirage verticale (panata)', poids_initial: 60, serie1_reps_cible: 12, serie2_reps_cible: 11, serie3_reps_cible: 10, repos: '1m45', ordre: 1 },
-  { jour: 'vendredi', groupe_musculaire: 'Triceps', exercice: 'Tirage over head', poids_initial: 40, serie1_reps_cible: 12, serie2_reps_cible: 11, serie3_reps_cible: 10, repos: null, ordre: 2 },
-  { jour: 'vendredi', groupe_musculaire: 'Triceps', exercice: 'Dips press', poids_initial: 120, serie1_reps_cible: 10, serie2_reps_cible: 10, serie3_reps_cible: 9, repos: '1m45', ordre: 3 },
-
-  // FRIDAY - Pecs
-  { jour: 'vendredi', groupe_musculaire: 'Pecs', exercice: 'Développer coucher haltères', poids_initial: 40, serie1_reps_cible: 12, serie2_reps_cible: 10, serie3_reps_cible: 9, repos: null, ordre: 4 },
-  { jour: 'vendredi', groupe_musculaire: 'Pecs', exercice: 'Super inclined chest press', poids_initial: 40, serie1_reps_cible: 11, serie2_reps_cible: 10, serie3_reps_cible: 9, repos: null, ordre: 5 },
-  { jour: 'vendredi', groupe_musculaire: 'Pecs', exercice: 'Pectoral machine', poids_initial: 50, serie1_reps_cible: 12, serie2_reps_cible: 11, serie3_reps_cible: 10, repos: null, ordre: 6 },
-  { jour: 'vendredi', groupe_musculaire: 'Pecs', exercice: 'Pecs double poulies', poids_initial: 20, serie1_reps_cible: 11, serie2_reps_cible: 10, serie3_reps_cible: 9, repos: null, ordre: 7 },
-
-  // SATURDAY - Jambes
-  { jour: 'samedi', groupe_musculaire: 'Jambes', exercice: 'Leg extensions', poids_initial: 80, serie1_reps_cible: 12, serie2_reps_cible: 11, serie3_reps_cible: 10, repos: null, ordre: 1 },
-  { jour: 'samedi', groupe_musculaire: 'Jambes', exercice: 'Unilateral leg extension', poids_initial: 30, serie1_reps_cible: 12, serie2_reps_cible: 11, serie3_reps_cible: 10, repos: null, ordre: 2 },
-  { jour: 'samedi', groupe_musculaire: 'Jambes', exercice: 'Squat smith machine', poids_initial: 40, serie1_reps_cible: 8, serie2_reps_cible: 7, serie3_reps_cible: 6, repos: null, ordre: 3 },
-  { jour: 'samedi', groupe_musculaire: 'Jambes', exercice: 'Presse (poids en plaques)', poids_initial: 100, serie1_reps_cible: 10, serie2_reps_cible: 9, serie3_reps_cible: 8, repos: null, ordre: 4 },
-  { jour: 'samedi', groupe_musculaire: 'Jambes', exercice: 'Fentes', poids_initial: 10, serie1_reps_cible: 20, serie2_reps_cible: 20, serie3_reps_cible: 20, repos: null, ordre: 5 },
-  { jour: 'samedi', groupe_musculaire: 'Jambes', exercice: 'Kneeling leg curling', poids_initial: 20, serie1_reps_cible: 8, serie2_reps_cible: 7, serie3_reps_cible: 7, repos: null, ordre: 6 },
-  { jour: 'samedi', groupe_musculaire: 'Jambes', exercice: 'Leg curling', poids_initial: 45, serie1_reps_cible: 8, serie2_reps_cible: 8, serie3_reps_cible: 10, repos: null, ordre: 7 },
-  { jour: 'samedi', groupe_musculaire: 'Jambes', exercice: 'Ischio haltère', poids_initial: 17.5, serie1_reps_cible: 9, serie2_reps_cible: 8, serie3_reps_cible: 7, repos: null, ordre: 8 },
-  { jour: 'samedi', groupe_musculaire: 'Jambes', exercice: 'Abductor machine', poids_initial: 70, serie1_reps_cible: 12, serie2_reps_cible: 10, serie3_reps_cible: 9, repos: null, ordre: 9 },
-]
+// Service role client bypasses RLS
+const supabase = createClient(supabaseUrl, serviceRoleKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+})
 
 async function seed() {
-  console.log('Deleting existing exercises...')
-  const { error: deleteError } = await supabase.from('exercises').delete().neq('id', 0)
+  console.log('Deleting existing exercises (no user_id filter — service role)...')
+  const { error: deleteError } = await supabase.from('exercises').delete().is('user_id', null)
   if (deleteError) {
     console.error('Error deleting exercises:', deleteError)
     process.exit(1)
   }
 
-  console.log('Inserting exercises...')
-  const { data, error: insertError } = await supabase.from('exercises').insert(exercises).select()
+  console.log(`Inserting ${TEMPLATE_EXERCISES.length} template exercises (user_id = null)...`)
+  const { data, error: insertError } = await supabase
+    .from('exercises')
+    .insert(TEMPLATE_EXERCISES) // no user_id → template rows
+    .select()
+
   if (insertError) {
     console.error('Error inserting exercises:', insertError)
     process.exit(1)
